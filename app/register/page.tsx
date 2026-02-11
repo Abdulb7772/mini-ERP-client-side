@@ -53,7 +53,8 @@ export default function RegisterPage() {
       setLoading(true);
       try {
         // Register the user
-        await axios.post(`${API_URL}/auth/register`, {
+        const apiUrl = API_URL.includes('/api') ? API_URL : `${API_URL}/api`;
+        await axios.post(`${apiUrl}/auth/register`, {
           name: values.name,
           email: values.email,
           password: values.password,

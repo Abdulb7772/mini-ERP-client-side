@@ -16,7 +16,8 @@ const handler = NextAuth({
 
         try {
           const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-          const res = await fetch(`${API_URL}/auth/login`, {
+          const apiUrl = API_URL.includes('/api') ? API_URL : `${API_URL}/api`;
+          const res = await fetch(`${apiUrl}/auth/login`, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
