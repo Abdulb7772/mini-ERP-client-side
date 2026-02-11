@@ -16,8 +16,17 @@ const handler = NextAuth({
 
         try {
           const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
-          const apiUrl = API_URL.includes('/api') ? API_URL : `${API_URL}/api`;
-          const res = await fetch(`${apiUrl}/auth/login`, {
+          console.log('🔍 [NextAuth] API_URL from env:', API_URL);
+          
+          // Remove /api if it exists at the end, we'll add it back consistently
+          const baseUrl = API_URL.replace(/\/api\/?$/, '');
+          const loginUrl = `${baseUrl}/api/auth/login`;
+          
+          console.log('🔍 [NextAuth] Base URL:', baseUrl);
+          console.log('🔍 [NextAuth] Full login URL:', loginUrl);
+          console.log('🔍 [NextAuth] Attempting login for:', credentials.email);
+          
+          const res = await fetch(loginUrl, {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
