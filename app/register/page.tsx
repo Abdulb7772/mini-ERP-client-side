@@ -52,6 +52,8 @@ export default function RegisterPage() {
     onSubmit: async (values) => {
       setLoading(true);
       try {
+        toast.loading("Creating your account...", { id: "register" });
+        
         // Register the user
         const apiUrl = API_URL.includes('/api') ? API_URL : `${API_URL}/api`;
         await axios.post(`${apiUrl}/auth/register`, {
@@ -63,15 +65,21 @@ export default function RegisterPage() {
           address: values.address,
         });
 
-        toast.success("Registration successful! Please check your email to verify your account.");
+        toast.success(
+          "🎉 Account created successfully! Please check your email to verify your account before logging in.",
+          { 
+            id: "register",
+            duration: 5000,
+          }
+        );
         
         // Redirect to login page
         setTimeout(() => {
           router.push("/login");
-        }, 2000);
+        }, 3000);
       } catch (error: any) {
         const message = error.response?.data?.message || "Registration failed";
-        toast.error(message);
+        toast.error(message, { id: "register" });
       } finally {
         setLoading(false);
       }
