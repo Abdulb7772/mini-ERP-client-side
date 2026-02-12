@@ -66,17 +66,17 @@ export default function RegisterPage() {
         });
 
         toast.success(
-          "🎉 Account created successfully! Please check your email to verify your account before logging in.",
+          "🎉 Account created successfully! Please check your email to verify your account.",
           { 
             id: "register",
             duration: 5000,
           }
         );
         
-        // Redirect to login page
+        // Redirect to verification page instead of login
         setTimeout(() => {
-          router.push("/login");
-        }, 3000);
+          router.push(`/verify-email?email=${encodeURIComponent(values.email)}`);
+        }, 1500);
       } catch (error: any) {
         const message = error.response?.data?.message || "Registration failed";
         toast.error(message, { id: "register" });
