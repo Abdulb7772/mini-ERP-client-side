@@ -5,7 +5,9 @@ import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Input from "@/components/Input";
 import Button from "@/components/Button";
+import Footer from "@/components/Footer";
 import toast from "react-hot-toast";
+import emailjs from "@emailjs/browser";
 
 export default function ContactPage() {
   const [loading, setLoading] = useState(false);
@@ -27,8 +29,35 @@ export default function ContactPage() {
     e.preventDefault();
     setLoading(true);
 
-    // Simulate form submission
-    setTimeout(() => {
+    try {
+      // EmailJS configuration - Add these to your .env.local file:
+      // NEXT_PUBLIC_EMAILJS_SERVICE_ID=your_service_id
+      // NEXT_PUBLIC_EMAILJS_TEMPLATE_ID=your_template_id
+      // NEXT_PUBLIC_EMAILJS_PUBLIC_KEY=your_public_key
+      
+      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID || "";
+      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID || "";
+      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY || "";
+
+      if (!serviceId || !templateId || !publicKey) {
+        toast.error("Email service is not configured. Please contact the administrator.");
+        setLoading(false);
+        return;
+      }
+
+      await emailjs.send(
+        serviceId,
+        templateId,
+        {
+          from_name: formData.name,
+          from_email: formData.email,
+          subject: formData.subject,
+          message: formData.message,
+          to_name: "MiniERP Support",
+        },
+        publicKey
+      );
+
       toast.success("Thank you for contacting us! We'll get back to you soon.");
       setFormData({
         name: "",
@@ -36,24 +65,20 @@ export default function ContactPage() {
         subject: "",
         message: "",
       });
+    } catch (error) {
+      console.error("Email sending failed:", error);
+      toast.error("Failed to send message. Please try again later.");
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
     <>
-      <Navbar />
       <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              Contact Us
-            </h1>
-            <p className="text-xl text-gray-600">
-              Have questions? We'd love to hear from you.
-            </p>
-          </div>
+         
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {/* Contact Form */}
@@ -210,6 +235,8 @@ export default function ContactPage() {
           </div>
         </div>
       </div>
+
+      <Footer />
     </>
   );
 }
