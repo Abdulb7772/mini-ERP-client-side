@@ -110,16 +110,16 @@ export default function AboutPage() {
   return (
     <div className="min-h-screen bg-gray-900">
       {/* Hero Section - Structure is fixed, only text is editable */}
-      <section className="relative min-h-[80vh] flex items-center justify-center overflow-hidden">
-        {/* Background with gradient and pattern */}
-        <div className="absolute inset-0 bg-linear-to-br from-gray-900 via-blue-900 to-purple-900">
-          <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20"></div>
+      <section className="relative min-h-[80vh] flex items-center justify-start overflow-hidden">
+        {/* Background Image with Overlay */}
+        <div className="absolute inset-0 z-0">
+          <div className="absolute inset-0 bg-linear-to-r from-black/80 via-black/60 to-transparent z-10"></div>
+          <img 
+            src="/pic1.png" 
+            alt="Business Management" 
+            className="w-full h-full object-cover"
+          />
         </div>
-        
-        {/* Animated gradient orbs */}
-        <div className="absolute top-20 left-20 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-        <div className="absolute top-40 right-20 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
-        <div className="absolute bottom-20 left-1/2 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-4000"></div>
         
         {/* Content */}
         <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
