@@ -1,6 +1,380 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+
+interface Block {
+  id: string;
+  type: "text" | "image" | "heading" | "hero";
+  content: string;
+  position?: {
+    x: number;
+    y: number;
+  };
+  size?: {
+    width: number;
+    height: number;
+  };
+  style?: {
+    fontSize?: string;
+    fontWeight?: string;
+    color?: string;
+    backgroundColor?: string;
+    textAlign?: string;
+  };
+}
+
+interface AboutUsData {
+  blocks: Block[];
+  pageBackgroundColor?: string;
+}
+
 export default function AboutPage() {
+  const [aboutUs, setAboutUs] = useState<AboutUsData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const fetchAboutUs = useCallback(async () => {
+    try {
+      // Add timestamp to prevent caching
+      const timestamp = new Date().getTime();
+      const response = await fetch(`${API_URL}/about-us?t=${timestamp}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        cache: 'no-store',
+      });
+      
+      if (!response.ok) {
+        // 404 means no data exists yet, which is fine - show fallback
+        if (response.status === 404) {
+          console.log("No About Us content found, showing default content");
+          setAboutUs(null);
+          setError(false);
+          return;
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log("📄 Fetched About Us data:", data);
+      
+      if (data.success && data.data) {
+        console.log("📄 Setting About Us data with", data.data.blocks?.length, "blocks");
+        setAboutUs(data.data);
+        setError(false);
+      } else {
+        setAboutUs(null);
+      }
+    } catch (error) {
+      console.error("Error fetching about us:", error);
+      setError(true);
+      setAboutUs(null);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    
+    if (isMounted) {
+      fetchAboutUs();
+    }
+    
+    return () => {
+      isMounted = false;
+    };
+  }, [fetchAboutUs]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
+      </div>
+    );
+  }
+
+  // If blocks exist, render them
+  if (aboutUs && aboutUs.blocks && aboutUs.blocks.length > 0) {
+    // Check if blocks are text-only format (no position data or all positions are 0,0)
+    // This distinguishes between old absolute-positioned layout and new text-only layout
+    const firstBlock = aboutUs.blocks[0];
+    const isTextOnlyFormat = !firstBlock?.position || 
+                             (firstBlock.position.x === 0 && 
+                              firstBlock.position.y === 0 &&
+                              aboutUs.blocks.every(b => !b.position || (b.position.x === 0 && b.position.y === 0)));
+
+    console.log("📄 Rendering blocks:", {
+      blockCount: aboutUs.blocks.length,
+      isTextOnlyFormat,
+      firstBlockPosition: firstBlock?.position
+    });
+
+    if (isTextOnlyFormat) {
+      // Render text-only blocks in modern layout
+      return (
+        <div className="min-h-screen" style={{ backgroundColor: aboutUs.pageBackgroundColor || "#111827" }}>
+          {/* Content */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+            <div className="space-y-12">
+              {(() => {
+                const renderedBlocks: JSX.Element[] = [];
+                let i = 0;
+                
+                while (i < aboutUs.blocks.length) {
+                  const block = aboutUs.blocks[i];
+                  
+                  // Check if this is a feature card (background #374151)
+                  if (block.type === "text" && 
+                      block.style?.backgroundColor === "#374151" && 
+                      i < aboutUs.blocks.length - 1 &&
+                      aboutUs.blocks[i + 1]?.type === "text" &&
+                      aboutUs.blocks[i + 1]?.style?.backgroundColor === "#374151") {
+                    
+                    // Collect consecutive feature cards
+                    const featureCards: typeof aboutUs.blocks = [];
+                    while (i < aboutUs.blocks.length && 
+                           aboutUs.blocks[i]?.type === "text" && 
+                           aboutUs.blocks[i]?.style?.backgroundColor === "#374151") {
+                      featureCards.push(aboutUs.blocks[i]);
+                      i++;
+                    }
+                    
+                    // Render feature cards in grid
+                    renderedBlocks.push(
+                      <div key={`grid-${featureCards[0].id}`} className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {featureCards.map((card) => (
+                          <div
+                            key={card.id}
+                            className="transition-all duration-300 hover:-translate-y-2"
+                          >
+                            <div
+                              style={{
+                                fontSize: card.style?.fontSize,
+                                fontWeight: card.style?.fontWeight,
+                                color: card.style?.color,
+                                textAlign: card.style?.textAlign as any,
+                              }}
+                              dangerouslySetInnerHTML={{ __html: card.content }}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  } else {
+                    // Render single block
+                    renderedBlocks.push(
+                      <div
+                        key={block.id}
+                        className={block.style?.backgroundColor && block.style.backgroundColor !== "transparent" ? "p-6 rounded-xl" : ""}
+                        style={{
+                          backgroundColor: block.style?.backgroundColor !== "transparent" 
+                            ? block.style?.backgroundColor 
+                            : undefined,
+                        }}
+                      >
+                        {block.type === "heading" ? (
+                          <h2
+                            style={{
+                              fontSize: block.style?.fontSize,
+                              fontWeight: block.style?.fontWeight,
+                              color: block.style?.color,
+                              textAlign: block.style?.textAlign as any,
+                            }}
+                          >
+                            {block.content}
+                          </h2>
+                        ) : (
+                          <div
+                            style={{
+                              fontSize: block.style?.fontSize,
+                              fontWeight: block.style?.fontWeight,
+                              color: block.style?.color,
+                              textAlign: block.style?.textAlign as any,
+                            }}
+                            dangerouslySetInnerHTML={{ __html: block.content }}
+                          />
+                        )}
+                      </div>
+                    );
+                    i++;
+                  }
+                }
+                
+                return renderedBlocks;
+              })()}
+            </div>
+          </div>
+
+          {/* Footer */}
+          <footer className="border-t border-gray-800 text-white py-12 px-4 sm:px-6 lg:px-8" style={{ backgroundColor: aboutUs.pageBackgroundColor || "#111827" }}>
+            <div className="max-w-7xl mx-auto">
+              <div className="grid md:grid-cols-4 gap-8">
+                <div>
+                  <span className="text-2xl font-bold bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                    MiniERP
+                  </span>
+                  <p className="mt-4 text-gray-400">
+                    Complete business management solution for modern enterprises
+                  </p>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-4">Product</h3>
+                  <ul className="space-y-2 text-gray-400">
+                    <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
+                    <li><a href="#" className="hover:text-white transition-colors">Documentation</a></li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-4">Company</h3>
+                  <ul className="space-y-2 text-gray-400">
+                    <li><Link href="/about" className="hover:text-white transition-colors">About</Link></li>
+                    <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+                    <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="font-semibold mb-4">Legal</h3>
+                  <ul className="space-y-2 text-gray-400">
+                    <li><a href="#" className="hover:text-white transition-colors">Privacy</a></li>
+                    <li><a href="#" className="hover:text-white transition-colors">Terms</a></li>
+                    <li><a href="#" className="hover:text-white transition-colors">Security</a></li>
+                  </ul>
+                </div>
+              </div>
+              <div className="mt-12 pt-8 border-t border-gray-800 text-center text-gray-400">
+                <p>&copy; 2026 MiniERP. All rights reserved.</p>
+              </div>
+            </div>
+          </footer>
+        </div>
+      );
+    }
+
+    // Old format with absolute positioning
+    return (
+      <div 
+        className="min-h-screen" 
+        style={{ backgroundColor: aboutUs.pageBackgroundColor || "#ffffff" }}
+      >
+        {/* Render blocks */}
+        <div className="relative" style={{ minHeight: "100vh" }}>
+          {aboutUs.blocks.map((block) => (
+            <div
+              key={block.id}
+              className="absolute"
+              style={{
+                left: `${block.position?.x || 0}px`,
+                top: `${block.position?.y || 0}px`,
+                width: `${block.size?.width || 300}px`,
+                minHeight: `${block.size?.height || 100}px`,
+                backgroundColor: block.style?.backgroundColor,
+              }}
+            >
+              {block.type === "text" && (
+                <div
+                  className="p-4 h-full overflow-auto"
+                  style={{
+                    fontSize: block.style?.fontSize,
+                    fontWeight: block.style?.fontWeight,
+                    color: block.style?.color,
+                    textAlign: block.style?.textAlign as any,
+                  }}
+                  dangerouslySetInnerHTML={{ __html: block.content }}
+                />
+              )}
+              {block.type === "heading" && (
+                <div
+                  className="p-4 h-full flex items-center"
+                  style={{
+                    fontSize: block.style?.fontSize,
+                    fontWeight: block.style?.fontWeight,
+                    color: block.style?.color,
+                    textAlign: block.style?.textAlign as any,
+                  }}
+                >
+                  {block.content}
+                </div>
+              )}
+              {block.type === "hero" && (
+                <div
+                  className="p-8 h-full flex flex-col justify-center relative overflow-hidden"
+                  style={{
+                    backgroundImage: block.content.startsWith("http") ? `url(${block.content})` : "none",
+                    backgroundSize: "cover",
+                    backgroundPosition: "center",
+                  }}
+                >
+                  <div className="relative z-10">
+                    <h1
+                      style={{
+                        fontSize: block.style?.fontSize,
+                        fontWeight: block.style?.fontWeight,
+                        color: block.style?.color,
+                      }}
+                    >
+                      Hero Section
+                    </h1>
+                  </div>
+                </div>
+              )}
+              {block.type === "image" && block.content && (
+                <img src={block.content} alt="Content" className="w-full h-full object-cover" />
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <footer className="bg-gray-900 text-white py-12 px-4 sm:px-6 lg:px-8 relative" style={{ marginTop: "2000px" }}>
+          <div className="max-w-7xl mx-auto">
+            <div className="grid md:grid-cols-4 gap-8">
+              <div>
+                <span className="text-2xl font-bold bg-linear-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  MiniERP
+                </span>
+                <p className="mt-4 text-gray-400">
+                  Complete business management solution for modern enterprises
+                </p>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-4">Product</h3>
+                <ul className="space-y-2 text-gray-400">
+                  <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
+                  <li><a href="#" className="hover:text-white transition-colors">Documentation</a></li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-4">Company</h3>
+                <ul className="space-y-2 text-gray-400">
+                  <li><Link href="/about" className="hover:text-white transition-colors">About</Link></li>
+                  <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+                  <li><Link href="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-semibold mb-4">Legal</h3>
+                <ul className="space-y-2 text-gray-400">
+                  <li><a href="#" className="hover:text-white transition-colors">Privacy</a></li>
+                  <li><a href="#" className="hover:text-white transition-colors">Terms</a></li>
+                  <li><a href="#" className="hover:text-white transition-colors">Security</a></li>
+                </ul>
+              </div>
+            </div>
+            <div className="mt-12 pt-8 border-t border-gray-800 text-center text-gray-400">
+              <p>&copy; 2026 MiniERP. All rights reserved.</p>
+            </div>
+          </div>
+        </footer>
+      </div>
+    );
+  }
+
+  // Fallback content if no blocks exist
   return (
     <div className="min-h-screen bg-gray-900">
       {/* About Us Header */}
