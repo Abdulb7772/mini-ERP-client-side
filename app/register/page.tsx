@@ -54,9 +54,8 @@ export default function RegisterPage() {
       try {
         toast.loading("Creating your account...", { id: "register" });
         
-        // Register the user
-        const apiUrl = API_URL.includes('/api') ? API_URL : `${API_URL}/api`;
-        await axios.post(`${apiUrl}/auth/register`, {
+        // Register the user - API_URL already includes /api
+        await axios.post(`${API_URL}/auth/register`, {
           name: values.name,
           email: values.email,
           password: values.password,
