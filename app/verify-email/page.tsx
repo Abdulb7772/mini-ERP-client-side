@@ -62,6 +62,9 @@ function VerifyEmailContent() {
     setLoading(true);
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      console.log('Resend API URL:', `${API_URL}/auth/resend-verification`);
+      console.log('Email:', email);
+      
       const response = await fetch(`${API_URL}/auth/resend-verification`, {
         method: "POST",
         headers: {
@@ -70,15 +73,18 @@ function VerifyEmailContent() {
         body: JSON.stringify({ email }),
       });
 
+      console.log('Response status:', response.status);
       const data = await response.json();
+      console.log('Response data:', data);
 
       if (response.ok && data.status === "success") {
         toast.success("Verification email sent! Please check your inbox.");
       } else {
-        toast.error(data.message || "Failed to send verification email");
+        toast.error(data.message || `Failed to send verification email (Status: ${response.status})`);
       }
     } catch (error) {
-      toast.error("An error occurred. Please try again.");
+      console.error('Resend error:', error);
+      toast.error("Network error. Please check your connection and try again.");
     } finally {
       setLoading(false);
     }
