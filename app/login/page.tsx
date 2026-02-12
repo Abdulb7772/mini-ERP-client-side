@@ -59,7 +59,7 @@ function LoginForm() {
           }
           setLoading(false);
         } else if (result?.ok) {
-          toast.success("Login successful! Redirecting...");
+          toast.success("Login successful!");
           
           // Get callback URL or default to home page
           const callbackUrl = searchParams.get("callbackUrl") || "/";
