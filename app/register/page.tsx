@@ -52,10 +52,20 @@ export default function RegisterPage() {
     onSubmit: async (values) => {
       setLoading(true);
       try {
+        console.log('=== REGISTRATION ATTEMPT ===');
+        console.log('API_URL:', API_URL);
+        console.log('Registration data:', {
+          name: values.name,
+          email: values.email,
+          role: "customer",
+          phone: values.phone,
+          address: values.address,
+        });
+        
         toast.loading("Creating your account...", { id: "register" });
         
         // Register the user - API_URL already includes /api
-        await axios.post(`${API_URL}/auth/register`, {
+        const response = await axios.post(`${API_URL}/auth/register`, {
           name: values.name,
           email: values.email,
           password: values.password,
@@ -63,6 +73,8 @@ export default function RegisterPage() {
           phone: values.phone,
           address: values.address,
         });
+        
+        console.log('Registration response:', response.data);
 
         toast.success(
           "🎉 Account created successfully! Please check your email to verify your account.",
@@ -74,13 +86,17 @@ export default function RegisterPage() {
         
         // Redirect to verification page instead of login
         setTimeout(() => {
+          console.log('Redirecting to verification page...');
           router.push(`/verify-email?email=${encodeURIComponent(values.email)}`);
         }, 1500);
       } catch (error: any) {
+        console.error('Registration error:', error);
+        console.error('Error response:', error.response?.data);
         const message = error.response?.data?.message || "Registration failed";
         toast.error(message, { id: "register" });
       } finally {
         setLoading(false);
+        console.log('=== REGISTRATION COMPLETE ===');
       }
     },
   });
