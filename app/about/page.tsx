@@ -120,7 +120,6 @@ export default function AboutPage() {
             className="w-full h-full object-cover"
           />
         </div>
-        
         {/* Content */}
         <div className="relative z-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="max-w-3xl">
@@ -226,49 +225,22 @@ export default function AboutPage() {
       </section>
 
       {/* Why Choose Section - Structure is fixed, only text is editable */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-800">
+      // <section className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 dark:bg-gray-800">
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
                 Why Choose MiniERP?
               </h2>
-              <div
-                className="prose prose-lg dark:prose-invert"
-                dangerouslySetInnerHTML={{ 
-                  __html: getBlockContent('text-8', `
-                    <p class="text-lg text-gray-600 dark:text-gray-300 mb-6">
-                      MiniERP is designed to simplify business operations for small to medium-sized enterprises. Our intuitive platform brings together all essential business functions in one place.
-                    </p>
-                    <ul class="space-y-4">
-                      <li class="flex items-start">
-                        <svg class="w-6 h-6 text-green-500 mr-3 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span class="text-gray-700 dark:text-gray-300">Easy to use interface with minimal learning curve</span>
-                      </li>
-                      <li class="flex items-start">
-                        <svg class="w-6 h-6 text-green-500 mr-3 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span class="text-gray-700 dark:text-gray-300">Real-time updates and notifications</span>
-                      </li>
-                      <li class="flex items-start">
-                        <svg class="w-6 h-6 text-green-500 mr-3 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span class="text-gray-700 dark:text-gray-300">Secure and reliable cloud-based solution</span>
-                      </li>
-                      <li class="flex items-start">
-                        <svg class="w-6 h-6 text-green-500 mr-3 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                        <span class="text-gray-700 dark:text-gray-300">Scalable architecture that grows with your business</span>
-                      </li>
-                    </ul>
-                  `)
-                }}
-              />
+             <div className="p-8 bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2">
+              <div className="w-14 h-14 bg-linear-to-br from-yellow-500 to-yellow-600 rounded-xl flex items-center justify-center mb-6">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <div dangerouslySetInnerHTML={{ 
+                __html: getBlockContent('text-5', '<h3 style="font-size: 24px; font-weight: bold; margin-bottom: 16px; color: #ffffff;">Analytics & Reports</h3><p style="color: #d1d5db;">Gain insights with comprehensive dashboards and detailed business analytics</p>')
+              }} />
             </div>
             <div className="relative">
               <div className="aspect-square bg-linear-to-br from-blue-500 to-purple-600 rounded-3xl opacity-20 absolute inset-0 blur-3xl"></div>
