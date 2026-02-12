@@ -48,6 +48,8 @@ function LoginForm() {
           redirect: false,
         });
 
+        console.log('Login result:', result);
+
         if (result?.error) {
           // Check if error is about email verification
           if (result.error.includes("verify") || result.error.includes("Verify")) {
@@ -55,18 +57,24 @@ function LoginForm() {
           } else {
             toast.error(result.error || "Invalid email or password");
           }
-        } else {
-          toast.success("Login successful!");
+          setLoading(false);
+        } else if (result?.ok) {
+          toast.success("Login successful! Redirecting...");
           
           // Get callback URL or default to home page
           const callbackUrl = searchParams.get("callbackUrl") || "/";
           
-          // Use window.location.href to ensure session is fully refreshed
-          window.location.href = callbackUrl;
+          // Add delay to show toast before redirect
+          setTimeout(() => {
+            window.location.href = callbackUrl;
+          }, 1000);
+        } else {
+          toast.error("Login failed. Please try again.");
+          setLoading(false);
         }
       } catch (error) {
+        console.error('Login error:', error);
         toast.error("An error occurred during login");
-      } finally {
         setLoading(false);
       }
     },
