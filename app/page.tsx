@@ -128,6 +128,10 @@ export default function Home() {
 
   const fetchProducts = async () => {
     try {
+      console.log('=== FETCHING PRODUCTS ===');
+      console.log('API_URL:', API_URL);
+      console.log('Full URL:', `${API_URL}/products`);
+      
       // Fetch products without authentication since it's a public route
       const response = await axios.get(`${API_URL}/products`, {
         params: {
@@ -135,8 +139,12 @@ export default function Home() {
           page: 1
         }
       });
-      console.log("Products response:", response.data);
+      
+      console.log('Products response status:', response.status);
+      console.log('Products response data:', response.data);
+      
       const productsData = response.data.products || response.data.data || [];
+      console.log('Products found:', productsData.length);
       
       // Fetch variations for products with hasVariations and calculate lowest price
       const productsWithPrices = await Promise.all(
@@ -157,13 +165,20 @@ export default function Home() {
         })
       );
       
+      console.log('Products with prices:', productsWithPrices);
       setProducts(productsWithPrices);
     } catch (error: any) {
-      console.error("Error fetching products:", error.response?.data || error.message);
+      console.error('=== ERROR FETCHING PRODUCTS ===');
+      console.error('Error object:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error message:', error.message);
+      console.error('Error status:', error.response?.status);
       // Set empty array on error so page still renders
       setProducts([]);
+      toast.error('Failed to load products. Please try again.');
     } finally {
       setLoading(false);
+      console.log('=== PRODUCTS FETCH COMPLETE ===');
     }
   };
 
