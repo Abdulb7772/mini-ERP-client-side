@@ -219,13 +219,13 @@ export default function AboutPage() {
         <div className="max-w-7xl mx-auto">
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-6">
+              <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
                 Why Choose MiniERP?
               </h2>
               <div
-                className="prose prose-lg dark:prose-invert"
+                className="prose prose-lg prose-invert **:text-white"
                 dangerouslySetInnerHTML={{ 
-                __html: getBlockContent('text-5', '<h3 style="font-size: 24px; font-weight: bold; margin-bottom: 16px; color: #ffffff;">Analytics & Reports</h3><p style="color: #d1d5db;">Gain insights with comprehensive dashboards and detailed business analytics</p>')
+                __html: getBlockContent('text-5', '<h3 style="font-size: 24px; font-weight: bold; margin-bottom: 16px; color: #ffffff;">Analytics & Reports</h3><p style="color: #ffffff;">Gain insights with comprehensive dashboards and detailed business analytics</p>')
               }}
               />
             </div>
@@ -294,13 +294,13 @@ export default function AboutPage() {
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                       />
                     ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                      <div className="w-full h-full bg-linear-to-br from-blue-500 to-purple-600 flex items-center justify-center">
                         <span className="text-4xl font-bold text-white">
                           {employee.name.charAt(0)}
                         </span>
                       </div>
                     )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    <div className="absolute inset-0 bg-linear-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   </div>
                   <div className="p-4">
                     <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1 line-clamp-1">
