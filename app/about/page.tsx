@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Footer from "@/components/Footer";
+import { employeeAPI } from "@/services/apiService";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
@@ -32,8 +33,19 @@ interface AboutUsData {
   pageBackgroundColor?: string;
 }
 
+interface Employee {
+  _id: string;
+  name: string;
+  position: string;
+  yearsOfExperience: number;
+  imageUrl?: string;
+  bio?: string;
+  status: "active" | "inactive";
+}
+
 export default function AboutPage() {
   const [aboutUs, setAboutUs] = useState<AboutUsData | null>(null);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -79,11 +91,21 @@ export default function AboutPage() {
     }
   }, []);
 
+  const fetchEmployees = async () => {
+    try {
+      const response = await employeeAPI.getActiveEmployees();
+      setEmployees(response.data);
+    } catch (error) {
+      console.error("Error fetching employees:", error);
+    }
+  };
+
   useEffect(() => {
     let isMounted = true;
     
     if (isMounted) {
       fetchAboutUs();
+      fetchEmployees();
     }
     
     return () => {
@@ -245,6 +267,66 @@ export default function AboutPage() {
           </Link>
         </div>
       </section>
+
+      {/* Our Team Section */}
+      {employees.length > 0 && (
+        <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-900">
+          <div className="max-w-7xl mx-auto">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-3">
+                Meet Our Team
+              </h2>
+              <p className="text-lg text-gray-600 dark:text-gray-400">
+                The talented people behind our success
+              </p>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-5">
+              {employees.map((employee) => (
+                <div
+                  key={employee._id}
+                  className="group relative bg-white dark:bg-gray-800 rounded-xl shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 overflow-hidden"
+                >
+                  <div className="aspect-square relative overflow-hidden">
+                    {employee.imageUrl ? (
+                      <img
+                        src={employee.imageUrl}
+                        alt={employee.name}
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                        <span className="text-4xl font-bold text-white">
+                          {employee.name.charAt(0)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  </div>
+                  <div className="p-4">
+                    <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1 line-clamp-1">
+                      {employee.name}
+                    </h3>
+                    <p className="text-xs text-blue-600 dark:text-blue-400 font-semibold mb-2 line-clamp-1">
+                      {employee.position}
+                    </p>
+                    <div className="flex items-center text-xs text-gray-600 dark:text-gray-400 mb-2">
+                      <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      {employee.yearsOfExperience} {employee.yearsOfExperience === 1 ? 'yr' : 'yrs'}
+                    </div>
+                    {employee.bio && (
+                      <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                        {employee.bio}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       <Footer />
     </div>

@@ -121,94 +121,125 @@ export default function BlogsPage() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      {/* Cards Grid */}
+      <div className="mb-6">
         {loading ? (
           <div className="p-12 text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
             <p className="mt-4 text-gray-600">Loading blogs...</p>
           </div>
+        ) : paginatedBlogs.length === 0 ? (
+          <div className="bg-white rounded-lg shadow-md p-12 text-center text-gray-600">
+            No blogs found
+          </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-purple-300 text-gray-700">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider">
-                    Picture
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider">
-                    Title
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Author
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Description
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Created
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {paginatedBlogs.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-12 text-center text-gray-600">
-                      No blogs found
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedBlogs.map((blog) => (
-                  <tr key={blog._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4">
-                      {blog.imageUrl ? (
-                        <img
-                          src={blog.imageUrl}
-                          alt={blog.title}
-                          className="h-16 w-16 object-cover rounded-md"
-                        />
-                      ) : (
-                        <div className="h-16 w-16 bg-gray-200 rounded-md flex items-center justify-center">
-                          <span className="text-gray-400 text-xs">No image</span>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {paginatedBlogs.map((blog) => (
+              blog.imageUrl ? (
+                // Flip Card for blogs WITH images
+                <div
+                  key={blog._id}
+                  className="group h-96 perspective-[1000px]"
+                >
+                  <div className="relative h-full w-full transition-all duration-1000 delay-200 transform-3d group-hover:rotate-y-180">
+                    {/* Front Side - Image */}
+                    <div className="absolute inset-0 h-full w-full rounded-xl backface-hidden">
+                      <div className="h-full w-full bg-white rounded-xl shadow-lg overflow-hidden">
+                        <div className="relative h-full">
+                          <img
+                            src={blog.imageUrl}
+                            alt={blog.title}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute bottom-0 left-0 right-0 bg-linear-to-t from-black/80 to-transparent p-4">
+                            <h3 className="text-xl font-bold text-white mb-1">{blog.title}</h3>
+                            <p className="text-sm text-gray-200">By {blog.author}</p>
+                          </div>
                         </div>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm font-medium text-gray-900">
-                        {blog.title}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-600">{blog.author}</div>
-                    </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-600 max-w-md truncate">
-                        {stripHtml(blog.description).substring(0, 100)}...
+                    </div>
+
+                    {/* Back Side - Description & Button */}
+                    <div className="absolute inset-0 h-full w-full rounded-xl bg-linear-to-br from-purple-600 to-indigo-600 px-6 py-8 text-white transform-[rotateY(180deg)] backface-hidden shadow-lg">
+                      <div className="flex flex-col h-full">
+                        <h3 className="text-xl font-bold mb-3">{blog.title}</h3>
+                        <div className="flex-1 overflow-hidden">
+                          <p className="text-sm text-white/90 mb-2">
+                            <strong>By:</strong> {blog.author}
+                          </p>
+                          <p className="text-sm text-white/90 mb-3">
+                            <strong>Date:</strong> {new Date(blog.createdAt).toLocaleDateString()}
+                          </p>
+                          <div className="text-sm text-white/90 line-clamp-6">
+                            {stripHtml(blog.description)}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setViewBlog(blog);
+                            setViewModalOpen(true);
+                          }}
+                          className="mt-4 w-full bg-white text-purple-600 font-semibold py-3 px-4 rounded-lg hover:bg-gray-100 transition-colors shadow-md"
+                        >
+                          View Details
+                        </button>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-600">
-                        {new Date(blog.createdAt).toLocaleDateString()}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // Static Card for blogs WITHOUT images
+                <div
+                  key={blog._id}
+                  className="h-96"
+                >
+                  <div 
+                    className="h-full w-full rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105"
+                    style={{
+                      background: [
+                        'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
+                        'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
+                        'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
+                        'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
+                        'linear-gradient(135deg, #30cfd0 0%, #330867 100%)',
+                        'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
+                        'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+                        'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
+                        'linear-gradient(135deg, #ff6e7f 0%, #bfe9ff 100%)'
+                      ][filteredBlogs.indexOf(blog) % 10]
+                    }}
+                  >
+                    <div className="flex flex-col h-full p-6">
+                      <div className="flex-1 overflow-hidden">
+                        <div className="inline-block p-2 bg-white/20 rounded-lg mb-3 backdrop-blur-sm">
+                          <span className="text-2xl">📝</span>
+                        </div>
+                        <h3 className="text-xl font-bold text-white mb-3 drop-shadow-md">{blog.title}</h3>
+                        <p className="text-sm text-white/90 mb-2">
+                          <strong>By:</strong> {blog.author}
+                        </p>
+                        <p className="text-sm text-white/90 mb-4">
+                          <strong>Date:</strong> {new Date(blog.createdAt).toLocaleDateString()}
+                        </p>
+                        <div className="text-sm text-white/90 line-clamp-8 leading-relaxed">
+                          {stripHtml(blog.description)}
+                        </div>
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
                         onClick={() => {
                           setViewBlog(blog);
                           setViewModalOpen(true);
                         }}
-                        className="text-indigo-600 hover:text-indigo-900"
+                        className="mt-4 w-full bg-white text-purple-700 font-semibold py-3 px-4 rounded-lg hover:bg-gray-50 transition-all shadow-md hover:shadow-lg"
                       >
-                        View
+                        View Details
                       </button>
-                    </td>
-                  </tr>
-                )))}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+                </div>
+              )
+            ))}
           </div>
         )}
       </div>
