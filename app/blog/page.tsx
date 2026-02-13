@@ -1,27 +1,31 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import Footer from "@/components/Footer";
-import axios from "axios";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+import { blogAPI } from "@/services/apiService";
 
 interface Blog {
   _id: string;
   title: string;
-  author: string;
   description: string;
   imageUrl?: string;
-  status: string;
+  author: string;
+  status: "published" | "blocked";
   createdAt: string;
+  updatedAt: string;
 }
 
-export default function BlogPage() {
+export default function BlogsPage() {
+  const router = useRouter();
   const [blogs, setBlogs] = useState<Blog[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [imageFilter, setImageFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [viewBlog, setViewBlog] = useState<Blog | null>(null);
 
   useEffect(() => {
     fetchBlogs();
@@ -29,7 +33,7 @@ export default function BlogPage() {
 
   const fetchBlogs = async () => {
     try {
-      const response = await axios.get(`${API_URL}/blogs/published`);
+      const response = await blogAPI.getBlogs();
       setBlogs(response.data);
     } catch (error) {
       console.error("Error fetching blogs:", error);
@@ -39,119 +43,291 @@ export default function BlogPage() {
     }
   };
 
+  const filteredBlogs = blogs.filter((blog) => {
+    const matchesSearch =
+      blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      blog.author.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesImage =
+      imageFilter === "all" ||
+      (imageFilter === "with-image" && blog.imageUrl) ||
+      (imageFilter === "without-image" && !blog.imageUrl);
+    return matchesSearch && matchesImage;
+  });
+
   const stripHtml = (html: string) => {
     const tmp = document.createElement("DIV");
     tmp.innerHTML = html;
     return tmp.textContent || tmp.innerText || "";
   };
 
-  const filteredBlogs = blogs.filter((blog) => {
-    const matchesSearch =
-      blog.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      blog.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      stripHtml(blog.description).toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesSearch;
-  });
+  // Pagination
+  const totalPages = Math.ceil(filteredBlogs.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedBlogs = filteredBlogs.slice(startIndex, endIndex);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, itemsPerPage, imageFilter]);
+
+  const handleItemsPerPageChange = (value: string) => {
+    const num = parseInt(value);
+    if (!isNaN(num) && num > 0 && num <= 500) {
+      setItemsPerPage(num);
+    }
+  };
 
   return (
-    <>
-      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Blog</h1>
-            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Stay updated with the latest news, tutorials, and insights about MiniERP
-            </p>
-          </div>
-
-          {/* Filters */}
-          <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-            <div className="grid md:grid-cols-1 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Search
-                </label>
-                <input
-                  type="text"
-                  placeholder="Search blogs..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Blog Table */}
-          <div className="bg-white rounded-lg shadow-md overflow-hidden">
-            {loading ? (
-              <div className="p-12 text-center">
-                <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
-                <p className="mt-4 text-gray-600">Loading blogs...</p>
-              </div>
-            ) : filteredBlogs.length === 0 ? (
-              <div className="p-12 text-center">
-                <p className="text-gray-600">No blogs found.</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Title
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Author
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Published Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Description
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredBlogs.map((blog) => (
-                      <tr key={blog._id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4">
-                          <div className="text-sm font-medium text-gray-900">
-                            {blog.title}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-600">{blog.author}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-600">
-                            {new Date(blog.createdAt).toLocaleDateString()}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-600 max-w-md">
-                            {stripHtml(blog.description).substring(0, 150)}...
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-
-          {/* Results count */}
-          {!loading && (
-            <div className="mt-4 text-center text-sm text-gray-600">
-              Showing {filteredBlogs.length} of {blogs.length} blogs
-            </div>
-          )}
+    <div className="p-6">
+      <div className="flex justify-between items-center mb-6 ">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Blog Management</h1>
+          <p className="text-gray-600 mt-1">Manage your blog posts</p>
         </div>
       </div>
 
-      <Footer />
-    </>
+      {/* Filters */}
+      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-2">
+              Search
+            </label>
+            <input
+              type="text"
+              placeholder="Search by title or author..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-4 py-2 text-gray-900 placeholder:text-gray-400 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-900 mb-2">
+              Picture
+            </label>
+            <select
+              value={imageFilter}
+              onChange={(e) => setImageFilter(e.target.value)}
+              className="w-full px-4 py-2 text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+            >
+              <option value="all">All Blogs</option>
+              <option value="with-image">With Picture</option>
+              <option value="without-image">Without Picture</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        {loading ? (
+          <div className="p-12 text-center">
+            <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+            <p className="mt-4 text-gray-600">Loading blogs...</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-purple-300 text-gray-700">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider">
+                    Picture
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium  uppercase tracking-wider">
+                    Title
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                    Author
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                    Description
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                    Created
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {paginatedBlogs.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-12 text-center text-gray-600">
+                      No blogs found
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedBlogs.map((blog) => (
+                  <tr key={blog._id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4">
+                      {blog.imageUrl ? (
+                        <img
+                          src={blog.imageUrl}
+                          alt={blog.title}
+                          className="h-16 w-16 object-cover rounded-md"
+                        />
+                      ) : (
+                        <div className="h-16 w-16 bg-gray-200 rounded-md flex items-center justify-center">
+                          <span className="text-gray-400 text-xs">No image</span>
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-gray-900">
+                        {blog.title}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-600">{blog.author}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-600 max-w-md truncate">
+                        {stripHtml(blog.description).substring(0, 100)}...
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-600">
+                        {new Date(blog.createdAt).toLocaleDateString()}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <button
+                        onClick={() => {
+                          setViewBlog(blog);
+                          setViewModalOpen(true);
+                        }}
+                        className="text-indigo-600 hover:text-indigo-900"
+                      >
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                )))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Pagination */}
+      {!loading && filteredBlogs.length > 0 && (
+        <div className="mt-6 flex items-center justify-between">
+          <div className="text-sm text-gray-600">
+            Showing {startIndex + 1} to {Math.min(endIndex, filteredBlogs.length)} of {filteredBlogs.length} blogs
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1">
+              <span className="text-sm text-gray-600">Show</span>
+              <input
+                type="number"
+                min="1"
+                max="500"
+                value={itemsPerPage}
+                onChange={(e) => handleItemsPerPageChange(e.target.value)}
+                className="w-16 px-2 py-1 text-sm text-gray-900 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+              />
+              <span className="text-sm text-gray-600">per page</span>
+            </div>
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              disabled={currentPage === 1}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Previous
+            </button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+              <button
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`px-4 py-2 border rounded-md text-sm font-medium ${
+                  currentPage === page
+                    ? "bg-purple-600 text-white border-purple-600"
+                    : "border-gray-300 text-gray-700 bg-white hover:bg-gray-50"
+                }`}
+              >
+                {page}
+              </button>
+            ))}
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
+
+      
+      {/* View Blog Modal */}
+      {viewModalOpen && viewBlog && (
+        <div className="fixed inset-0 z-50 overflow-y-auto pt-20">
+          <div className="flex items-start justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            <div
+              className="fixed inset-0 backdrop-blur-sm bg-black/30 transition-opacity"
+              onClick={() => {
+                setViewModalOpen(false);
+                setViewBlog(null);
+              }}
+            ></div>
+            <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div className="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle w-full max-w-4xl">
+              <div className="bg-purple-500 text-white px-6 py-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-semibold">{viewBlog.title}</h3>
+                  <button
+                    onClick={() => {
+                      setViewModalOpen(false);
+                      setViewBlog(null);
+                    }}
+                    className="text-white hover:text-gray-200"
+                  >
+                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div className="bg-white px-6 py-6 max-h-[70vh] overflow-y-auto">
+                {viewBlog.imageUrl && (
+                  <div className="mb-6">
+                    <img
+                      src={viewBlog.imageUrl}
+                      alt={viewBlog.title}
+                      className="w-full max-h-80 object-cover rounded-lg"
+                    />
+                  </div>
+                )}
+                <div className="space-y-4">
+                  <div className="flex items-center space-x-4 text-sm text-gray-500">
+                    <span>By <strong className="text-gray-700">{viewBlog.author}</strong></span>
+                    <span>•</span>
+                    <span>{new Date(viewBlog.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  <div 
+                    className="prose prose-sm max-w-none text-gray-700"
+                    dangerouslySetInnerHTML={{ __html: viewBlog.description }}
+                  />
+                </div>
+              </div>
+              <div className="bg-gray-50 px-6 py-4 flex justify-end">
+                <button
+                  onClick={() => {
+                    setViewModalOpen(false);
+                    setViewBlog(null);
+                  }}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
