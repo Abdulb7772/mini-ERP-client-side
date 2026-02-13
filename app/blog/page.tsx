@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { blogAPI } from "@/services/apiService";
+import Footer from "@/components/Footer";
 
 interface Blog {
   _id: string;
@@ -79,6 +80,7 @@ export default function BlogsPage() {
   };
 
   return (
+    <>
     <div className="p-6">
       <div className="flex justify-between items-center mb-6 ">
         <div>
@@ -329,5 +331,7 @@ export default function BlogsPage() {
         </div>
       )}
     </div>
+    <Footer />
+    </>
   );
 }
