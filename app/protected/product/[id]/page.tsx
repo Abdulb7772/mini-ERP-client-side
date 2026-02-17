@@ -7,6 +7,7 @@ import axios from "axios";
 import Link from "next/link";
 import OrderNowModal from "@/components/OrderNowModal";
 import CheckoutModal from "@/components/CheckoutModal";
+import ProductReviews from "@/components/ProductReviews";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
@@ -336,6 +337,11 @@ export default function ProductDetailPage() {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="mt-8">
+          <ProductReviews productId={product._id} />
         </div>
       </div>
 

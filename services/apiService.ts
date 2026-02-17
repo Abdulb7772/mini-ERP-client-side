@@ -20,3 +20,15 @@ export const notificationAPI = {
   markAllAsRead: () => axiosInstance.patch("/notifications/mark-all-read"),
   deleteNotification: (id: string) => axiosInstance.delete(`/notifications/${id}`),
 };
+
+// Review APIs
+export const reviewAPI = {
+  getProductReviews: (productId: string, params?: any) => 
+    axiosInstance.get(`/reviews/products/${productId}`, { params }),
+  getMyReviews: (params?: any) => axiosInstance.get("/reviews/my-reviews", { params }),
+  createReview: (data: any) => axiosInstance.post("/reviews", data),
+  updateReview: (id: string, data: any) => axiosInstance.put(`/reviews/${id}`, data),
+  deleteReview: (id: string) => axiosInstance.delete(`/reviews/${id}`),
+  checkEligibility: (orderId: string) => axiosInstance.get(`/reviews/check-eligibility/${orderId}`),
+  markHelpful: (id: string) => axiosInstance.post(`/reviews/${id}/helpful`),
+};

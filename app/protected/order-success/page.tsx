@@ -7,6 +7,8 @@ import { useSession } from "next-auth/react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import ComplaintModal from "@/components/ComplaintModal";
+import OrderReviewButton from "@/components/OrderReviewButton";
+import { reviewAPI } from "@/services/apiService";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
@@ -57,6 +59,33 @@ interface Complaint {
   updatedAt: string;
 }
 
+interface Review {
+  _id: string;
+  orderId: {
+    _id: string;
+    orderNumber: string;
+  };
+  productId: {
+    _id: string;
+    name: string;
+    imageUrl?: string;
+  };
+  rating: number;
+  description: string;
+  images?: string[];
+  status: "pending" | "approved" | "rejected";
+  isVerified: boolean;
+  helpful: number;
+  adminReply?: string;
+  repliedBy?: {
+    _id: string;
+    name: string;
+  };
+  repliedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 function OrderSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -70,6 +99,8 @@ function OrderSuccessContent() {
   const [complaintMessage, setComplaintMessage] = useState("");
   const [complaints, setComplaints] = useState<Complaint[]>([]);
   const [loadingComplaints, setLoadingComplaints] = useState(false);
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [loadingReviews, setLoadingReviews] = useState(false);
   
   const orderId = searchParams.get("orderId");
 
@@ -98,6 +129,9 @@ function OrderSuccessContent() {
       
       // Fetch complaints for this order
       fetchComplaints();
+      
+      // Fetch reviews for this order
+      fetchReviews();
     } catch (error: any) {
       console.error("Error fetching order details:", error);
     } finally {
@@ -123,6 +157,23 @@ function OrderSuccessContent() {
       console.error("Error fetching complaints:", error);
     } finally {
       setLoadingComplaints(false);
+    }
+  };
+
+  const fetchReviews = async () => {
+    try {
+      setLoadingReviews(true);
+      const response = await reviewAPI.getMyReviews();
+      
+      // Filter reviews for this specific order
+      const orderReviews = response.data.data.filter(
+        (review: any) => review.orderId._id === orderId
+      );
+      setReviews(orderReviews);
+    } catch (error: any) {
+      console.error("Error fetching reviews:", error);
+    } finally {
+      setLoadingReviews(false);
     }
   };
 
@@ -602,7 +653,7 @@ function OrderSuccessContent() {
             </svg>
             Print Receipt
           </button>
-          {canFileComplaint && (
+          {(canFileComplaint || orderDetails.status === "delivered") && (
             <button
               onClick={() => setShowComplaintModal(true)}
               className="flex-1 px-6 py-4 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-semibold transition text-center flex items-center justify-center gap-2"
@@ -612,6 +663,22 @@ function OrderSuccessContent() {
               </svg>
               File Complaint
             </button>
+          )}
+          {orderDetails.status === "delivered" && (
+            <OrderReviewButton
+              orderId={orderDetails._id}
+              orderNumber={orderDetails.orderNumber}
+              products={orderDetails.items.map(item => ({
+                productId: item.productId._id,
+                productName: item.productId.name,
+                productImage: item.productId.imageUrl || item.productId.images?.[0],
+                variationId: item.variationId
+              }))}
+              onSuccess={() => {
+                toast.success("Thank you for reviewing!");
+                fetchReviews();
+              }}
+            />
           )}
           {orderDetails.status !== "cancelled" && orderDetails.status !== "delivered" && (
             <button
@@ -711,6 +778,7 @@ function OrderSuccessContent() {
           onSuccess={() => {
             checkComplaintEligibility();
             fetchComplaints();
+            fetchReviews();
           }}
         />
       )}
@@ -857,6 +925,152 @@ function OrderSuccessContent() {
                       </div>
                     </div>
                   )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Reviews Section */}
+      {reviews.length > 0 && (
+        <div className="mt-8 bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+          <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4">
+            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
+              </svg>
+              Your Reviews ({reviews.length})
+            </h2>
+          </div>
+          <div className="p-6 space-y-4">
+            {reviews.map((review) => (
+              <div
+                key={review._id}
+                className="bg-gray-750 rounded-lg border border-gray-700 overflow-hidden"
+              >
+                {/* Review Header */}
+                <div className="bg-gray-750 px-4 py-3 border-b border-gray-700 flex flex-wrap items-center justify-between gap-3">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    {review.productId?.imageUrl && (
+                      <img
+                        src={review.productId.imageUrl}
+                        alt={review.productId.name}
+                        className="w-12 h-12 rounded object-cover"
+                      />
+                    )}
+                    <div>
+                      <h3 className="text-white font-semibold">{review.productId?.name || "Product"}</h3>
+                      <div className="flex items-center gap-2 mt-1">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <svg
+                            key={star}
+                            className={`w-4 h-4 ${
+                              star <= review.rating ? "text-yellow-500" : "text-gray-500"
+                            }`}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                      </div>
+                    </div>
+                    {review.isVerified && (
+                      <span className="text-xs text-green-400 flex items-center gap-1">
+                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                          <path
+                            fillRule="evenodd"
+                            d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                        Verified Purchase
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-gray-400 text-xs">
+                    {new Date(review.createdAt).toLocaleString("en-US", {
+                      year: "numeric",
+                      month: "short",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                </div>
+
+                {/* Review Body */}
+                <div className="p-4 space-y-3">
+                  <div
+                    className="text-gray-300 text-sm prose prose-invert max-w-none"
+                    dangerouslySetInnerHTML={{ __html: review.description }}
+                  />
+
+                  {/* Review Images */}
+                  {review.images && review.images.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-gray-400 text-sm font-semibold">Images:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {review.images.map((url, idx) => (
+                          <a
+                            key={idx}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="block"
+                          >
+                            <img
+                              src={url}
+                              alt={`Review image ${idx + 1}`}
+                              className="w-20 h-20 object-cover rounded border border-gray-600 hover:border-purple-500 transition"
+                            />
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Admin Reply */}
+                  {review.adminReply && (
+                    <div className="mt-4 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 border-2 border-blue-600/40 rounded-lg p-4 shadow-lg">
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shrink-0">
+                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between mb-2">
+                            <p className="text-blue-400 font-bold text-sm flex items-center gap-2">
+                              Reply from {review.repliedBy?.name || "Support Team"}
+                            </p>
+                            {review.repliedAt && (
+                              <span className="text-xs text-blue-400/70">
+                                {new Date(review.repliedAt).toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                })}
+                              </span>
+                            )}
+                          </div>
+                          <div
+                            className="text-blue-50 text-sm prose prose-sm prose-invert max-w-none bg-gray-800/50 rounded p-3"
+                            dangerouslySetInnerHTML={{ __html: review.adminReply }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Helpful Count */}
+                  <div className="pt-3 border-t border-gray-700 flex items-center gap-2 text-sm">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
+                    </svg>
+                    <span className="text-gray-400">{review.helpful} people found this helpful</span>
+                  </div>
                 </div>
               </div>
             ))}

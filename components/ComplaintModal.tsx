@@ -190,7 +190,7 @@ export default function ComplaintModal({
                 <p className="font-semibold mb-1">Important Information</p>
                 <ul className="list-disc list-inside space-y-1 text-blue-200">
                   <li>Our team will review your complaint within 24-48 hours</li>
-                  <li>You will receive updates via email</li>
+                  <li>Your complaint will be replied by our team shortly</li>
                   <li>Please provide as much detail as possible</li>
                 </ul>
               </div>
