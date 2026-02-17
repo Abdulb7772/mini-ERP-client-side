@@ -164,7 +164,7 @@ export default function ReviewForm({
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Add Photos (optional)
         </label>
-        <CloudinaryUpload onUpload={setImages} currentImages={images} />
+        <CloudinaryUpload onUpload={setImages} currentFiles={images} />
         <p className="text-xs text-gray-500 mt-1">
           Help others by adding photos of your product
         </p>
