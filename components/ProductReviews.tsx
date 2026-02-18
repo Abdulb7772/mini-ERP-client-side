@@ -15,6 +15,7 @@ interface Review {
   description: string;
   images?: string[];
   helpful: number;
+  hasMarkedHelpful?: boolean;
   isVerified: boolean;
   adminReply?: string;
   repliedBy?: {
@@ -71,18 +72,19 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
   const handleMarkHelpful = async (reviewId: string) => {
     try {
       await reviewAPI.markHelpful(reviewId);
-      // Update the helpful count locally
+      // Update the helpful count and mark as voted locally
       setReviews((prev) =>
         prev.map((review) =>
           review._id === reviewId
-            ? { ...review, helpful: review.helpful + 1 }
+            ? { ...review, helpful: review.helpful + 1, hasMarkedHelpful: true }
             : review
         )
       );
       toast.success("Marked as helpful");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error marking review as helpful:", error);
-      toast.error("Failed to mark as helpful");
+      const errorMessage = error?.response?.data?.message || "Failed to mark as helpful";
+      toast.error(errorMessage);
     }
   };
 
@@ -308,11 +310,17 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
               <div className="flex items-center gap-2 pt-4 border-t">
                 <button
                   onClick={() => handleMarkHelpful(review._id)}
-                  className="flex items-center gap-2 text-sm text-gray-600 hover:text-orange-600 transition"
+                  disabled={review.hasMarkedHelpful}
+                  className={`flex items-center gap-2 text-sm transition ${
+                    review.hasMarkedHelpful
+                      ? "text-orange-600 cursor-not-allowed opacity-75"
+                      : "text-gray-600 hover:text-orange-600"
+                  }`}
+                  title={review.hasMarkedHelpful ? "You already marked this as helpful" : "Mark as helpful"}
                 >
                   <svg
                     className="w-4 h-4"
-                    fill="none"
+                    fill={review.hasMarkedHelpful ? "currentColor" : "none"}
                     stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
@@ -324,7 +332,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
                     />
                   </svg>
                   <span>
-                    Helpful ({review.helpful})
+                    {review.hasMarkedHelpful ? "Marked Helpful" : "Helpful"} ({review.helpful})
                   </span>
                 </button>
               </div>

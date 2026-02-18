@@ -118,11 +118,21 @@ export default function Home() {
   };
 
   const handleAddToCart = (product: Product) => {
+    if (!session?.user?.accessToken) {
+      toast.error("Please login to add items to cart");
+      handleProtectedAction("/login");
+      return;
+    }
     setSelectedProduct(product);
     setIsModalOpen(true);
   };
 
   const handleOrderNow = (product: Product) => {
+    if (!session?.user?.accessToken) {
+      toast.error("Please login to place an order");
+      handleProtectedAction("/login");
+      return;
+    }
     setSelectedOrderProduct(product);
     setIsOrderModalOpen(true);
   };
