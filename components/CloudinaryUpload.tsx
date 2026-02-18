@@ -41,12 +41,23 @@ export default function CloudinaryUpload({
 
   /**
    * Upload file to Cloudinary using unsigned preset
-   * Uses 'auto' resource type to automatically detect file type
+   * Detects file type and uses appropriate resource type
    * @param file - File to upload
    * @returns Secure URL of uploaded file or null on error
    */
   const uploadToCloudinary = async (file: File): Promise<string | null> => {
     try {
+      // Determine if this is an image or document
+      const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(file.name) || file.type.startsWith('image/');
+      const isPDF = /\.pdf$/i.test(file.name) || file.type === 'application/pdf';
+      const isDocument = !isImage;
+
+      // For PDFs and documents, use backend upload (signed)
+      if (isDocument) {
+        return await uploadViaBackend(file);
+      }
+
+      // For images, use direct unsigned upload (faster)
       // Get environment variables
       const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
       const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
@@ -62,13 +73,16 @@ export default function CloudinaryUpload({
       formData.append('file', file);
       formData.append('upload_preset', uploadPreset);
 
-      // Use 'auto' resource type - automatically detects images, videos, raw files
-      const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
+      const resourceType = 'image';
+      
+      // Use appropriate resource type for upload
+      const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${resourceType}/upload`;
       
       console.log('📤 Cloudinary Upload:', {
         fileName: file.name,
         fileSize: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
         fileType: file.type,
+        resourceType,
         cloudName,
         uploadPreset,
         endpoint: uploadUrl
@@ -117,6 +131,62 @@ export default function CloudinaryUpload({
       const errorMsg = error.message || `Failed to upload ${file.name}`;
       toast.error(errorMsg);
       
+      return null;
+    }
+  };
+
+  /**
+   * Upload file via backend (for PDFs and documents)
+   * Uses signed Cloudinary upload with proper permissions
+   */
+  const uploadViaBackend = async (file: File): Promise<string | null> => {
+    try {
+      // Get access token from session
+      const session = await fetch('/api/auth/session').then(res => res.json());
+      const accessToken = session?.user?.accessToken;
+
+      if (!accessToken) {
+        throw new Error('Authentication required. Please log in.');
+      }
+
+      console.log('📤 Backend Upload:', {
+        fileName: file.name,
+        fileSize: `${(file.size / 1024 / 1024).toFixed(2)} MB`,
+        fileType: file.type,
+      });
+
+      // Prepare form data
+      const formData = new FormData();
+      formData.append('files', file);
+
+      // Upload via backend
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      const response = await fetch(`${apiUrl}/upload`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        console.error('❌ Backend Upload Error:', errorData);
+        throw new Error(errorData?.message || 'Upload failed');
+      }
+
+      const data = await response.json();
+      
+      if (!data.success || !data.data?.urls?.[0]) {
+        throw new Error('Upload failed - invalid response');
+      }
+
+      console.log('✅ Backend Upload Successful:', data.data.urls[0]);
+      
+      return data.data.urls[0];
+    } catch (error: any) {
+      console.error('❌ Backend Upload Error:', error);
+      toast.error(error.message || 'Failed to upload file');
       return null;
     }
   };

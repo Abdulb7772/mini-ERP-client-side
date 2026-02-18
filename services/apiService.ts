@@ -32,3 +32,11 @@ export const reviewAPI = {
   checkEligibility: (orderId: string) => axiosInstance.get(`/reviews/check-eligibility/${orderId}`),
   markHelpful: (id: string) => axiosInstance.post(`/reviews/${id}/helpful`),
 };
+
+// Complaint APIs
+export const complaintAPI = {
+  getMyComplaints: () => axiosInstance.get("/complaints/my-complaints"),
+  getComplaint: (id: string) => axiosInstance.get(`/complaints/${id}`),
+  createComplaint: (data: any) => axiosInstance.post("/complaints", data),
+  canFileComplaint: (orderId: string) => axiosInstance.get(`/complaints/can-file/${orderId}`),
+};

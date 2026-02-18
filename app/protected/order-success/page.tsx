@@ -90,6 +90,25 @@ function OrderSuccessContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
+
+  // Fix Cloudinary URLs for non-image files (PDFs, etc.)
+  const getProperCloudinaryUrl = (url: string) => {
+    const isPDF = /\.pdf$/i.test(url);
+    const isDoc = /\.(doc|docx|txt|zip|rar)$/i.test(url);
+    
+    if ((isPDF || isDoc) && url.includes('/image/upload/')) {
+      url = url.replace('/image/upload/', '/raw/upload/');
+    }
+    
+    // For ALL /raw/upload/ files (PDFs, documents), use proxy endpoint
+    // This handles files even when they don't have .pdf extension in URL
+    if (url.includes('/raw/upload/')) {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000/api';
+      return `${apiUrl}/file-proxy?url=${encodeURIComponent(url)}`;
+    }
+    
+    return url;
+  };
   const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [canceling, setCanceling] = useState(false);
@@ -856,28 +875,46 @@ function OrderSuccessContent() {
                       <div className="flex flex-wrap gap-2">
                         {complaint.attachments.map((url, idx) => {
                           const isImage = /\.(jpg|jpeg|png|gif|webp|svg)$/i.test(url);
+                          const isPDF = /\.pdf$/i.test(url);
+                          const fileExtension = url.split('.').pop()?.toUpperCase() || 'FILE';
+                          const properUrl = getProperCloudinaryUrl(url);
+                          
                           return (
-                            <a
-                              key={idx}
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block"
-                            >
+                            <div key={idx}>
                               {isImage ? (
-                                <img
-                                  src={url}
-                                  alt={`Attachment ${idx + 1}`}
-                                  className="w-20 h-20 object-cover rounded border border-gray-600 hover:border-purple-500 transition"
-                                />
+                                <a
+                                  href={properUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="block"
+                                >
+                                  <img
+                                    src={properUrl}
+                                    alt={`Attachment ${idx + 1}`}
+                                    className="w-20 h-20 object-cover rounded border border-gray-600 hover:border-purple-500 transition"
+                                  />
+                                </a>
                               ) : (
-                                <div className="w-20 h-20 bg-gray-700 rounded border border-gray-600 hover:border-purple-500 transition flex items-center justify-center">
-                                  <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                  </svg>
-                                </div>
+                                <a
+                                  href={properUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="block w-20 h-20 bg-gray-700 rounded border border-gray-600 hover:border-purple-500 transition flex flex-col items-center justify-center p-2 group"
+                                  title={`View ${fileExtension}`}
+                                >
+                                  {isPDF ? (
+                                    <svg className="w-8 h-8 text-red-500 group-hover:text-red-400" fill="currentColor" viewBox="0 0 24 24">
+                                      <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6z" />
+                                    </svg>
+                                  ) : (
+                                    <svg className="w-8 h-8 text-gray-400 group-hover:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    </svg>
+                                  )}
+                                  <span className="text-xs text-gray-400 mt-1 font-semibold">{fileExtension}</span>
+                                </a>
                               )}
-                            </a>
+                            </div>
                           );
                         })}
                       </div>

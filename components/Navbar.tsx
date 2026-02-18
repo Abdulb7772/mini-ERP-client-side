@@ -205,6 +205,13 @@ export default function Navbar() {
                         My Orders
                       </Link>
                       <Link
+                        href="/protected/complaints"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition"
+                        onClick={() => setIsUserDropdownOpen(false)}
+                      >
+                        My Complaints
+                      </Link>
+                      <Link
                         href="/protected/change-password"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition"
                         onClick={() => setIsUserDropdownOpen(false)}
@@ -405,6 +412,13 @@ export default function Navbar() {
                     onClick={() => setIsMenuOpen(false)}
                   >
                     My Orders
+                  </Link>
+                  <Link
+                    href="/protected/complaints"
+                    className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-md transition mb-2"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    My Complaints
                   </Link>
                   <Link
                     href="/protected/change-password"
