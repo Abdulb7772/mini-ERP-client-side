@@ -230,13 +230,13 @@ function OrderSuccessContent() {
         }
       );
 
-      toast.success("Order cancelled successfully! Redirecting to home...");
+      toast.success("Order cancelled successfully! Refund will be processed after admin approval.");
       setShowCancelConfirm(false);
       
       // Redirect to home page after successful cancellation
       setTimeout(() => {
         router.push("/protected/products");
-      }, 1500);
+      }, 2000);
     } catch (error: any) {
       console.error("Error cancelling order:", error);
       toast.error(error.response?.data?.message || "Failed to cancel order");

@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { useState, useRef, useEffect } from "react";
 import NotificationBell from "./NotificationBell";
+import axios from "@/services/axios";
 
 export default function Navbar() {
   const router = useRouter();
@@ -13,12 +14,31 @@ export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [walletBalance, setWalletBalance] = useState<number>(0);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Prevent hydration mismatch
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Fetch wallet balance when authenticated
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchWalletBalance();
+    }
+  }, [status]);
+
+  const fetchWalletBalance = async () => {
+    try {
+      const response = await axios.get("/wallet");
+      if (response.data.success) {
+        setWalletBalance(response.data.data.balance);
+      }
+    } catch (error) {
+      console.error("Error fetching wallet balance:", error);
+    }
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -189,7 +209,25 @@ export default function Navbar() {
 
                   {/* Dropdown Menu */}
                   {isUserDropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5">
+                    <div className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg py-1 ring-1 ring-black ring-opacity-5">
+                      {/* Wallet Balance Display */}
+                      <div className="px-4 py-3 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
+                        <p className="text-xs text-gray-600 mb-1">Wallet Balance</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-2xl font-bold text-purple-600">
+                            {walletBalance.toFixed(2)}
+                          </p>
+                          <span className="text-xs text-gray-500 bg-white px-2 py-1 rounded">points</span>
+                        </div>
+                      </div>
+
+                      <Link
+                        href="/protected/wallet"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition font-medium"
+                        onClick={() => setIsUserDropdownOpen(false)}
+                      >
+                        💰 My Wallet
+                      </Link>
                       <Link
                         href="/protected/profile"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition"

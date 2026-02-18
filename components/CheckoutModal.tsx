@@ -10,6 +10,74 @@ import { Elements, CardElement, useStripe, useElements } from "@stripe/react-str
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
+// Wallet Payment Option Component
+function WalletPaymentOption({ onSelect, subtotal }: { onSelect: () => void; subtotal: number }) {
+  const { data: session } = useSession();
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchWalletBalance = async () => {
+      if (!session?.user?.accessToken) return;
+      
+      try {
+        const response = await axios.get(`${API_URL}/wallet`, {
+          headers: {
+            Authorization: `Bearer ${session.user.accessToken}`,
+          },
+        });
+        const balance = response.data?.data?.balance ?? 0;
+        setWalletBalance(balance);
+      } catch (error) {
+        console.error("Error fetching wallet balance:", error);
+        setWalletBalance(0); // Set to 0 on error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWalletBalance();
+  }, [session]);
+
+  const canPayFull = walletBalance >= subtotal;
+
+  return (
+    <button
+      onClick={onSelect}
+      disabled={loading || walletBalance <= 0}
+      className="w-full p-6 border-2 border-gray-200 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition group disabled:opacity-50 disabled:cursor-not-allowed"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center group-hover:bg-purple-200 transition">
+            <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z M12 21v-8" />
+            </svg>
+          </div>
+          <div className="text-left">
+            <h3 className="font-semibold text-lg text-gray-900">Pay with Wallet Points</h3>
+            <p className="text-sm text-gray-500">
+              {loading ? "Loading..." : `Balance: ${walletBalance.toFixed(2)} points`}
+            </p>
+            {!loading && (
+              canPayFull ? (
+                <p className="text-xs text-green-600 mt-1">✓ Sufficient balance</p>
+              ) : walletBalance > 0 ? (
+                <p className="text-xs text-yellow-600 mt-1">Partial payment available</p>
+              ) : (
+                <p className="text-xs text-red-600 mt-1">Insufficient balance</p>
+              )
+            )}
+          </div>
+        </div>
+        <svg className="w-6 h-6 text-gray-400 group-hover:text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </div>
+    </button>
+  );
+}
+
 // Initialize Stripe - validate the key exists
 const stripePublishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY;
 if (!stripePublishableKey) {
@@ -42,7 +110,7 @@ function CheckoutForm({
   onCancel,
 }: {
   cartItems: CartItem[];
-  paymentMethod: "cod" | "card";
+  paymentMethod: "cod" | "card" | "wallet";
   onSuccess: (orderId: string) => void;
   onCancel: () => void;
 }) {
@@ -55,26 +123,42 @@ function CheckoutForm({
     phone: "",
     address: "",
   });
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [useWallet, setUseWallet] = useState(false);
 
   useEffect(() => {
-    // Fetch customer details
+    // Fetch customer details and wallet balance
     const fetchCustomerInfo = async () => {
       if (!session?.user?.accessToken) return;
       
       try {
-        const response = await axios.get(`${API_URL}/auth/me`, {
-          headers: {
-            Authorization: `Bearer ${session.user.accessToken}`,
-          },
-        });
-        const user = response.data.data.user;
+        const [userResponse, walletResponse] = await Promise.all([
+          axios.get(`${API_URL}/auth/me`, {
+            headers: {
+              Authorization: `Bearer ${session.user.accessToken}`,
+            },
+          }),
+          axios.get(`${API_URL}/wallet`, {
+            headers: {
+              Authorization: `Bearer ${session.user.accessToken}`,
+            },
+          }),
+        ]);
+
+        const user = userResponse.data.data.user;
         setCustomerInfo({
           name: user.name || "",
           phone: user.phone || "",
           address: user.address || "",
         });
+
+        if (walletResponse.data.success) {
+          const balance = walletResponse.data?.data?.balance ?? 0;
+          setWalletBalance(balance);
+        }
       } catch (error) {
         console.error("Error fetching customer info:", error);
+        setWalletBalance(0); // Set to 0 on error
       }
     };
 
@@ -86,7 +170,10 @@ function CheckoutForm({
     0
   );
   const codFee = paymentMethod === "cod" ? 250 : 0;
-  const total = subtotal + codFee;
+  
+  // Calculate wallet discount (can't exceed subtotal + codFee)
+  const walletDiscount = useWallet ? Math.min(walletBalance, subtotal + codFee) : 0;
+  const total = subtotal + codFee - walletDiscount;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,6 +266,14 @@ function CheckoutForm({
           toast.error(paymentError.response?.data?.message || "Failed to create payment intent");
           setLoading(false);
         }
+      } else if (paymentMethod === "wallet") {
+        // Wallet payment - verify sufficient balance
+        if (walletBalance < total) {
+          toast.error(`Insufficient wallet balance. You have ${walletBalance.toFixed(2)} points but need ${total.toFixed(2)} points.`);
+          setLoading(false);
+          return;
+        }
+        await placeOrder("wallet", `WALLET-${Date.now()}`);
       } else {
         // Cash on delivery
         await placeOrder("cod");
@@ -224,9 +319,10 @@ function CheckoutForm({
         shippingAddress: customerInfo.address,
         phone: customerInfo.phone,
         paymentMethod: paymentType,
-        paymentStatus: paymentType === "card" ? "paid" : "unpaid",
+        paymentStatus: paymentType === "card" || paymentType === "wallet" ? "paid" : "unpaid",
         transactionId: transactionId || undefined,
         totalAmount: total,
+        walletPointsUsed: paymentType === "wallet" ? total : (useWallet ? walletDiscount : 0),
       };
 
       console.log("Placing order with data:", orderData);
@@ -240,7 +336,15 @@ function CheckoutForm({
 
       console.log("Order placed successfully:", response.data);
       const orderId = response.data.data._id;
-      toast.success("Order placed successfully!");
+      
+      if (paymentType === "wallet") {
+        toast.success(`Order placed! Paid ${total.toFixed(2)} wallet points`);
+      } else if (useWallet && walletDiscount > 0) {
+        toast.success(`Order placed! Used ${walletDiscount.toFixed(2)} wallet points`);
+      } else {
+        toast.success("Order placed successfully!");
+      }
+      
       onSuccess(orderId);
     } catch (error: any) {
       console.error("Error placing order:", error);
@@ -314,6 +418,43 @@ function CheckoutForm({
                 <span className="font-medium">${codFee.toFixed(2)}</span>
               </div>
             )}
+            
+            {/* Wallet Section - only show toggle for COD/Card, for wallet payment show full deduction */}
+            {paymentMethod === "wallet" ? (
+              <div className="mt-3 pt-3 border-t">
+                <div className="flex justify-between text-sm text-purple-600">
+                  <span className="font-medium">Paid with Wallet Points</span>
+                  <span className="font-medium">-${total.toFixed(2)}</span>
+                </div>
+              </div>
+            ) : walletBalance > 0 && (
+              <div className="mt-3 pt-3 border-t">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="useWallet"
+                      checked={useWallet}
+                      onChange={(e) => setUseWallet(e.target.checked)}
+                      className="mr-2 h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                    />
+                    <label htmlFor="useWallet" className="text-sm font-medium text-gray-700 cursor-pointer">
+                      Use Wallet Points
+                    </label>
+                  </div>
+                  <span className="text-sm font-medium text-purple-600">
+                    {walletBalance.toFixed(2)} available
+                  </span>
+                </div>
+                {useWallet && (
+                  <div className="flex justify-between text-sm text-green-600">
+                    <span>Wallet Discount</span>
+                    <span className="font-medium">-${walletDiscount.toFixed(2)}</span>
+                  </div>
+                )}
+              </div>
+            )}
+            
             <div className="flex justify-between text-black font-bold text-lg mt-2 pt-2 border-t">
               <span>Total</span>
               <span className="text-purple-600">${total.toFixed(2)}</span>
@@ -347,6 +488,23 @@ function CheckoutForm({
         </div>
       )}
 
+      {/* Wallet Payment Info */}
+      {paymentMethod === "wallet" && (
+        <div className="bg-purple-50 border border-purple-200 p-4 rounded-lg">
+          <div className="flex items-start">
+            <svg className="w-6 h-6 text-purple-600 mt-0.5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="text-sm text-purple-800">
+              <p className="font-semibold mb-1">Payment with Wallet Points</p>
+              <p className="mb-1">Current Balance: <strong>{walletBalance.toFixed(2)} points</strong></p>
+              <p>Order Total: <strong>{total.toFixed(2)} points</strong></p>
+              <p className="mt-2">Remaining Balance: <strong>{(walletBalance - total).toFixed(2)} points</strong></p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Action Buttons */}
       <div className="flex gap-3">
         <button
@@ -362,7 +520,7 @@ function CheckoutForm({
           disabled={loading || (paymentMethod === "card" && !stripe)}
           className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? "Processing..." : paymentMethod === "cod" ? "Place Order" : "Pay Now"}
+          {loading ? "Processing..." : paymentMethod === "wallet" ? "Pay with Wallet" : paymentMethod === "cod" ? "Place Order" : "Pay Now"}
         </button>
       </div>
     </form>
@@ -371,10 +529,56 @@ function CheckoutForm({
 
 export default function CheckoutModal({ isOpen, onClose, cartItems, onOrderSuccess }: CheckoutModalProps) {
   const router = useRouter();
+  const { data: session } = useSession();
   const [step, setStep] = useState<"select" | "checkout">("select");
-  const [paymentMethod, setPaymentMethod] = useState<"cod" | "card" | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<"cod" | "card" | "wallet" | null>(null);
 
-  const handlePaymentSelect = (method: "cod" | "card") => {
+  // Validate cart products when modal opens
+  useEffect(() => {
+    const validateCartProducts = async () => {
+      if (!isOpen || !session?.user?.accessToken) return;
+
+      try {
+        // Check each product in cart to see if it still exists
+        const validationPromises = cartItems.map(async (item) => {
+          try {
+            const response = await axios.get(
+              `${API_URL}/products/${item.productId._id}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${session.user.accessToken}`,
+                },
+              }
+            );
+            return { valid: true, productId: item.productId._id, name: item.productId.name };
+          } catch (error: any) {
+            if (error.response?.status === 404) {
+              return { valid: false, productId: item.productId._id, name: item.productId.name };
+            }
+            return { valid: true, productId: item.productId._id, name: item.productId.name }; // Don't block on network errors
+          }
+        });
+
+        const results = await Promise.all(validationPromises);
+        const invalidProducts = results.filter(r => !r.valid);
+
+        if (invalidProducts.length > 0) {
+          const productNames = invalidProducts.map(p => p.name).join(', ');
+          toast.error(
+            `The following product(s) are no longer available: ${productNames}. Please remove them from your cart and try again.`,
+            { duration: 6000 }
+          );
+          onClose();
+        }
+      } catch (error) {
+        console.error("Error validating cart products:", error);
+      }
+    };
+
+    validateCartProducts();
+  }, [isOpen, session, cartItems, onClose]);
+
+  const handlePaymentSelect = (method: "cod" | "card" | "wallet") => {
     setPaymentMethod(method);
     setStep("checkout");
   };
@@ -494,6 +698,12 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, onOrderSucce
                   </svg>
                 </div>
               </button>
+
+              {/* Wallet Payment Option */}
+              <WalletPaymentOption 
+                onSelect={() => handlePaymentSelect("wallet")}
+                subtotal={subtotal}
+              />
             </div>
           ) : (
             <div>

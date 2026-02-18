@@ -40,3 +40,10 @@ export const complaintAPI = {
   createComplaint: (data: any) => axiosInstance.post("/complaints", data),
   canFileComplaint: (orderId: string) => axiosInstance.get(`/complaints/can-file/${orderId}`),
 };
+
+// Wallet APIs
+export const walletAPI = {
+  getWallet: () => axiosInstance.get("/wallet"),
+  getTransactions: (params?: any) => axiosInstance.get("/wallet/transactions", { params }),
+  checkBalance: (amount: number) => axiosInstance.get("/wallet/check-balance", { params: { amount } }),
+};
