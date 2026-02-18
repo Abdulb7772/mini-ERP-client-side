@@ -7,7 +7,7 @@ import { reviewAPI } from "@/services/apiService";
 import toast from "react-hot-toast";
 import Modal from "@/components/Modal";
 import ReviewForm from "@/components/ReviewForm";
-import Skeleton from "@/components/Skeleton";
+import {Skeleton} from "@/components/Skeleton";
 
 interface Review {
   _id: string;
