@@ -91,6 +91,83 @@ function OrderSuccessContent() {
   const searchParams = useSearchParams();
   const { data: session, status } = useSession();
 
+  // Add print styles
+  const printStyles = `
+    @media print {
+      /* Hide everything by default */
+      body * {
+        visibility: hidden;
+      }
+      
+      /* Only show the receipt section */
+      .print-receipt,
+      .print-receipt * {
+        visibility: visible;
+      }
+      
+      /* Position receipt at top of page */
+      .print-receipt {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        background: white !important;
+        padding: 20mm;
+      }
+      
+      /* Hide elements that shouldn't be printed */
+      .no-print,
+      .print-hide {
+        display: none !important;
+      }
+      
+      /* Adjust colors for printing */
+      .print-receipt h1,
+      .print-receipt h2,
+      .print-receipt h3,
+      .print-receipt p,
+      .print-receipt span,
+      .print-receipt div {
+        color: black !important;
+        background: transparent !important;
+      }
+      
+      /* Format tables and borders */
+      .print-receipt table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+      
+      .print-receipt table td,
+      .print-receipt table th {
+        border: 1px solid #ddd;
+        padding: 8px;
+        color: black !important;
+      }
+      
+      /* Remove shadows and rounded corners */
+      .print-receipt * {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+      }
+      
+      /* Ensure images print */
+      .print-receipt img {
+        max-width: 50px !important;
+        max-height: 50px !important;
+      }
+      
+      /* Page breaks */
+      .print-receipt {
+        page-break-after: auto;
+      }
+      
+      .print-item {
+        page-break-inside: avoid;
+      }
+    }
+  `;
+
   // Fix Cloudinary URLs for non-image files (PDFs, etc.)
   const getProperCloudinaryUrl = (url: string) => {
     const isPDF = /\.pdf$/i.test(url);
@@ -397,9 +474,12 @@ function OrderSuccessContent() {
 
   return (
     <div className="min-h-screen bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      {/* Add print styles */}
+      <style>{printStyles}</style>
+      
       <div className="max-w-4xl mx-auto">
         {/* Success Header */}
-        <div className={`bg-linear-to-r ${statusDetails.gradient} rounded-2xl shadow-2xl p-8 mb-8 text-center`}>
+        <div className={`bg-linear-to-r ${statusDetails.gradient} rounded-2xl shadow-2xl p-8 mb-8 text-center no-print`}>
           <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4">
             {statusDetails.icon}
           </div>
@@ -412,10 +492,11 @@ function OrderSuccessContent() {
           </p>
         </div>
 
-        {/* Order Details Card */}
-        <div className="bg-gray-800 rounded-2xl shadow-2xl overflow-hidden mb-8">
+        {/* Order Details Card - Printable Receipt */}
+        <div className="print-receipt bg-gray-800 rounded-2xl shadow-2xl overflow-hidden mb-8">
           <div className="bg-linear-to-r from-purple-600 to-blue-600 px-6 py-4">
-            <h2 className="text-2xl font-bold text-white">Order Details</h2>
+            <h2 className="text-2xl font-bold text-white">Order Receipt</h2>
+            <p className="text-white/80 text-sm mt-1">Order #{orderDetails.orderNumber}</p>
           </div>
           
           <div className="p-6 space-y-6">
@@ -469,7 +550,7 @@ function OrderSuccessContent() {
                   <p className="text-gray-400 text-sm mb-1">Delivery Address</p>
                   <p className="text-white font-semibold">{orderDetails.customerId.address}</p>
                 </div>
-                <div>
+                {/* <div>
                   <p className="text-gray-400 text-sm mb-1">Order Status</p>
                   <span className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
                     orderDetails.status === "delivered"
@@ -482,12 +563,12 @@ function OrderSuccessContent() {
                   }`}>
                     {orderDetails.status.charAt(0).toUpperCase() + orderDetails.status.slice(1)}
                   </span>
-                </div>
+                </div> */}
               </div>
             </div>
 
             {/* Order Status Timeline */}
-            <div className="border-t border-gray-700 pt-6">
+            <div className="border-t border-gray-700 pt-6 no-print">
               <h3 className="text-xl font-bold text-white mb-6">Order Status</h3>
               <div className="relative">
                 <div className="flex justify-between items-center">
@@ -653,7 +734,7 @@ function OrderSuccessContent() {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row gap-4 no-print">
           <Link
             href="/protected/products"
             className="flex-1 px-6 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition text-center flex items-center justify-center gap-2"
@@ -724,7 +805,7 @@ function OrderSuccessContent() {
 
         {/* Complaint Info Message */}
         {!canFileComplaint && complaintMessage && orderDetails.status !== "delivered" && (
-          <div className="mt-4 bg-yellow-600/20 border border-yellow-600 rounded-lg p-4">
+          <div className="mt-4 bg-yellow-600/20 border border-yellow-600 rounded-lg p-4 no-print">
             <div className="flex gap-3">
               <svg className="w-5 h-5 text-yellow-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -735,7 +816,7 @@ function OrderSuccessContent() {
         )}
 
         {/* Help Section */}
-        <div className="mt-8 bg-gray-800 rounded-lg p-6 text-center">
+        <div className="mt-8 bg-gray-800 rounded-lg p-6 text-center no-print">
           <p className="text-gray-400 mb-2">Need help with your order?</p>
           <Link
             href="/contact"
@@ -748,7 +829,7 @@ function OrderSuccessContent() {
 
       {/* Cancel Confirmation Modal */}
       {showCancelConfirm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 no-print">
           <div className="bg-gray-800 rounded-2xl shadow-2xl max-w-md w-full p-6 transform transition-all">
             <div className="flex items-center justify-center w-16 h-16 bg-red-600/20 rounded-full mx-auto mb-4">
               <svg className="w-8 h-8 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -804,7 +885,7 @@ function OrderSuccessContent() {
 
       {/* Complaints Section */}
       {complaints.length > 0 && (
-        <div className="mt-8 bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+        <div className="mt-8 bg-gray-800 rounded-2xl shadow-2xl overflow-hidden no-print">
           <div className="bg-gradient-to-r from-orange-600 to-red-600 px-6 py-4">
             <h2 className="text-2xl font-bold text-white flex items-center gap-2">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -971,7 +1052,7 @@ function OrderSuccessContent() {
 
       {/* Reviews Section */}
       {reviews.length > 0 && (
-        <div className="mt-8 bg-gray-800 rounded-2xl shadow-2xl overflow-hidden">
+        <div className="mt-8 bg-gray-800 rounded-2xl shadow-2xl overflow-hidden no-print">
           <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4">
             <h2 className="text-2xl font-bold text-white flex items-center gap-2">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

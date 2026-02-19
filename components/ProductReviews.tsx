@@ -71,19 +71,22 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
 
   const handleMarkHelpful = async (reviewId: string) => {
     try {
-      await reviewAPI.markHelpful(reviewId);
-      // Update the helpful count and mark as voted locally
+      const response = await reviewAPI.markHelpful(reviewId);
+      const { helpful, marked } = response.data.data;
+      
+      // Update the helpful count and toggle the marked status locally
       setReviews((prev) =>
         prev.map((review) =>
           review._id === reviewId
-            ? { ...review, helpful: review.helpful + 1, hasMarkedHelpful: true }
+            ? { ...review, helpful, hasMarkedHelpful: marked }
             : review
         )
       );
-      toast.success("Marked as helpful");
+      
+      toast.success(marked ? "Marked as helpful" : "Unmarked as helpful");
     } catch (error: any) {
-      console.error("Error marking review as helpful:", error);
-      const errorMessage = error?.response?.data?.message || "Failed to mark as helpful";
+      console.error("Error toggling helpful status:", error);
+      const errorMessage = error?.response?.data?.message || "Failed to update helpful status";
       toast.error(errorMessage);
     }
   };
@@ -310,13 +313,12 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
               <div className="flex items-center gap-2 pt-4 border-t">
                 <button
                   onClick={() => handleMarkHelpful(review._id)}
-                  disabled={review.hasMarkedHelpful}
                   className={`flex items-center gap-2 text-sm transition ${
                     review.hasMarkedHelpful
-                      ? "text-orange-600 cursor-not-allowed opacity-75"
+                      ? "text-orange-600 hover:text-orange-700"
                       : "text-gray-600 hover:text-orange-600"
                   }`}
-                  title={review.hasMarkedHelpful ? "You already marked this as helpful" : "Mark as helpful"}
+                  title={review.hasMarkedHelpful ? "Click to unmark as helpful" : "Click to mark as helpful"}
                 >
                   <svg
                     className="w-4 h-4"
@@ -332,7 +334,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
                     />
                   </svg>
                   <span>
-                    {review.hasMarkedHelpful ? "Marked Helpful" : "Helpful"} ({review.helpful})
+                    Helpful ({review.helpful})
                   </span>
                 </button>
               </div>
