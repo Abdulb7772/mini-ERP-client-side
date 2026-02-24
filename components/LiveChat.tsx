@@ -77,6 +77,9 @@ export default function LiveChat({ isOpen, onClose, orderId }: LiveChatProps) {
     isOpen: false,
     message: null
   });
+  const [showRecentChats, setShowRecentChats] = useState(false);
+  const [recentChats, setRecentChats] = useState<Chat[]>([]);
+  const [loadingRecentChats, setLoadingRecentChats] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -336,6 +339,39 @@ export default function LiveChat({ isOpen, onClose, orderId }: LiveChatProps) {
     setContextId(null);
   };
 
+  const loadRecentChats = async () => {
+    setLoadingRecentChats(true);
+    try {
+      const response = await axiosInstance.get("/chats", {
+        params: { type: "external" },
+      });
+      setRecentChats(response.data.data || []);
+    } catch (error) {
+      console.error("Error loading recent chats:", error);
+    } finally {
+      setLoadingRecentChats(false);
+    }
+  };
+
+  const handleSelectRecentChat = async (selectedChat: Chat) => {
+    // Leave current chat if any
+    if (chat) {
+      leaveChat(chat._id);
+    }
+    
+    setChat(selectedChat);
+    setInitialMessageSent(true);
+    setShowRecentChats(false);
+    loadChatMessages(selectedChat._id);
+  };
+
+  const handleToggleRecentChats = () => {
+    if (!showRecentChats) {
+      loadRecentChats();
+    }
+    setShowRecentChats(!showRecentChats);
+  };
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -370,6 +406,16 @@ export default function LiveChat({ isOpen, onClose, orderId }: LiveChatProps) {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleToggleRecentChats}
+              className="text-white hover:bg-white/20 p-2 rounded-lg transition-all duration-200 flex items-center gap-1 text-sm"
+              title="View recent chats"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
+              <span className="hidden sm:inline">Chats</span>
+            </button>
             {chat && initialMessageSent && (
               <button
                 onClick={handleNewChat}
@@ -697,6 +743,99 @@ export default function LiveChat({ isOpen, onClose, orderId }: LiveChatProps) {
                 <div>
                   <p className="text-sm text-gray-500 mb-1">Read by</p>
                   <p className="text-gray-900">{messageInfoModal.message.readBy.length} participant(s)</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Recent Chats Modal */}
+      {showRecentChats && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/40">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[600px] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between p-5 border-b border-gray-200">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Recent Chats</h3>
+                <p className="text-sm text-gray-500">View and continue your previous conversations</p>
+              </div>
+              <button
+                onClick={() => setShowRecentChats(false)}
+                className="text-gray-400 hover:text-gray-600 p-2 hover:bg-gray-100 rounded-lg transition"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            {/* Chats List */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {loadingRecentChats ? (
+                <div className="flex items-center justify-center h-40">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                </div>
+              ) : recentChats.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-40 text-gray-500">
+                  <svg className="w-16 h-16 mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  </svg>
+                  <p className="text-sm">No recent chats found</p>
+                  <p className="text-xs text-gray-400 mt-1">Start a new conversation to see it here</p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {recentChats.map((recentChat) => (
+                    <div
+                      key={recentChat._id}
+                      onClick={() => handleSelectRecentChat(recentChat)}
+                      className={`p-4 border rounded-lg cursor-pointer hover:bg-blue-50 hover:border-blue-300 transition-all ${
+                        chat?._id === recentChat._id
+                          ? "bg-blue-50 border-blue-400"
+                          : "bg-white border-gray-200"
+                      }`}
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-sm">
+                              {recentChat.contextType === "order" ? "📦" : "💬"}
+                            </div>
+                            <div>
+                              <h4 className="font-semibold text-gray-900">
+                                {recentChat.contextType === "order" && recentChat.contextId
+                                  ? `Order #${recentChat.contextId.orderNumber || recentChat.contextId}`
+                                  : "General Support"}
+                              </h4>
+                              <p className="text-xs text-gray-500">
+                                {recentChat.participants
+                                  .map((p) => p.name)
+                                  .join(", ")}
+                              </p>
+                            </div>
+                          </div>
+                          {recentChat.lastMessage && (
+                            <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                              {recentChat.lastMessage}
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right ml-4">
+                          {recentChat.lastMessageAt && (
+                            <p className="text-xs text-gray-500">
+                              {new Date(recentChat.lastMessageAt).toLocaleDateString()}
+                            </p>
+                          )}
+                          {chat?._id === recentChat._id && (
+                            <span className="inline-block mt-1 px-2 py-0.5 bg-blue-500 text-white text-xs rounded-full">
+                              Active
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
