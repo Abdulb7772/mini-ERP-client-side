@@ -468,7 +468,7 @@ export default function LiveChat({ isOpen, onClose, orderId }: LiveChatProps) {
                     <div
                       className={`min-w-[200px] max-w-[80%] rounded-2xl p-4 shadow-md break-words ${
                         message.senderId === session?.user?.id
-                          ? "bg-gradient-to-br from-blue-500 to-blue-600 text-white"
+                          ? "bg-gradient-to-br from-purple-500 to-pink-600 text-white"
                           : "bg-white border border-gray-200 text-gray-900"
                       }`}
                     >
@@ -483,7 +483,7 @@ export default function LiveChat({ isOpen, onClose, orderId }: LiveChatProps) {
                         <div 
                           className={`mt-2 p-2 rounded-lg border cursor-pointer hover:opacity-80 transition ${
                             message.senderId === session?.user?.id
-                              ? "bg-blue-400 border-blue-300"
+                              ? "bg-purple-400 border-purple-300"
                               : "bg-gray-100 border-gray-300"
                           }`}
                           onClick={() => setDetailsModal({ 
@@ -579,7 +579,7 @@ export default function LiveChat({ isOpen, onClose, orderId }: LiveChatProps) {
         </div>
 
         {/* Input */}
-        <div className="p-5 border-t border-gray-200 bg-gradient-to-r from-white to-gray-50">
+        <div className="p-5 border-t border-purple-200 bg-gradient-to-r from-purple-50 via-pink-50 to-blue-50">
           {contextType && (
             <div className="mb-2 flex items-center gap-2 text-sm">
               <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
