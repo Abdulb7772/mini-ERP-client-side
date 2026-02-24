@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 import { useState, useRef, useEffect } from "react";
 import NotificationBell from "./NotificationBell";
+import LiveChat from "./LiveChat";
 import axios from "@/services/axios";
 
 export default function Navbar() {
@@ -15,6 +16,7 @@ export default function Navbar() {
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [isLiveChatOpen, setIsLiveChatOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Prevent hydration mismatch
@@ -72,6 +74,7 @@ export default function Navbar() {
   }
 
   return (
+    <>
     <nav className="bg-white/50 backdrop-blur-md shadow-md sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
@@ -169,6 +172,30 @@ export default function Navbar() {
               </button>
 
               {/* Notification Bell */}
+
+              {/* Live Chat Button */}
+              {status === "authenticated" && (
+                <button
+                  onClick={() => setIsLiveChatOpen(true)}
+                  className="text-gray-700 hover:text-purple-600 p-2 rounded-md transition relative"
+                  title="Live Chat Support"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                </button>
+              )}
               <NotificationBell />
             </div>
 
@@ -498,5 +525,9 @@ export default function Navbar() {
         </div>
       )}
     </nav>
+    
+    {/* Live Chat Component */}
+    <LiveChat isOpen={isLiveChatOpen} onClose={() => setIsLiveChatOpen(false)} />
+    </>
   );
 }

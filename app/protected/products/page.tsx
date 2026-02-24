@@ -2,15 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axiosInstance from "@/services/axios";
 import { useSession } from "next-auth/react";
 import toast from "react-hot-toast";
 import AddToCartModal from "@/components/AddToCartModal";
 import OrderNowModal from "@/components/OrderNowModal";
 import CheckoutModal from "@/components/CheckoutModal";
 import Footer from "@/components/Footer";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 // Helper function to strip HTML tags
 const stripHtml = (html: string) => {
@@ -88,7 +86,7 @@ export default function ProductsPage() {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get(`${API_URL}/products`, {
+      const response = await axiosInstance.get("/products", {
         params: {
           limit: 1000,
           includeVariations: 'true'
@@ -146,11 +144,7 @@ export default function ProductsPage() {
     if (!session?.user?.accessToken) return;
     
     try {
-      const response = await axios.get(`${API_URL}/wishlist`, {
-        headers: {
-          Authorization: `Bearer ${session.user.accessToken}`,
-        },
-      });
+      const response = await axiosInstance.get("/wishlist");
       const items = response.data.data?.items || [];
       const productIds = new Set<string>(items.map((item: any) => item.productId._id || item.productId));
       setWishlistItems(productIds);
@@ -172,11 +166,8 @@ export default function ProductsPage() {
 
     try {
       if (isInWishlist) {
-        await axios.delete(`${API_URL}/wishlist/remove`, {
+        await axiosInstance.delete("/wishlist/remove", {
           data: { productId },
-          headers: {
-            Authorization: `Bearer ${session.user.accessToken}`,
-          },
         });
         setWishlistItems((prev) => {
           const newSet = new Set(prev);
@@ -185,14 +176,9 @@ export default function ProductsPage() {
         });
         toast.success("Removed from wishlist");
       } else {
-        await axios.post(
-          `${API_URL}/wishlist`,
-          { productId },
-          {
-            headers: {
-              Authorization: `Bearer ${session.user.accessToken}`,
-            },
-          }
+        await axiosInstance.post(
+          "/wishlist",
+          { productId }
         );
         setWishlistItems((prev) => new Set(prev).add(productId));
         toast.success("Added to wishlist", {

@@ -3,11 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import axios from "axios";
+import axiosInstance from "@/services/axios";
 import toast from "react-hot-toast";
 import CheckoutModal from "@/components/CheckoutModal";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 interface CartItem {
   productId: string;
@@ -48,11 +46,7 @@ export default function CartPage() {
   const fetchCart = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/cart`, {
-        headers: {
-          Authorization: `Bearer ${session?.user?.accessToken}`,
-        },
-      });
+      const response = await axiosInstance.get("/cart");
       setCart(response.data.data);
     } catch (error: any) {
       console.error("Error fetching cart:", error);
@@ -71,17 +65,12 @@ export default function CartPage() {
 
     try {
       setUpdating(`${productId}-${variationId || "none"}`);
-      const response = await axios.put(
-        `${API_URL}/cart/update`,
+      const response = await axiosInstance.put(
+        "/cart/update",
         {
           productId,
           variationId,
           quantity: newQuantity,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${session?.user?.accessToken}`,
-          },
         }
       );
       setCart(response.data.data);
@@ -100,13 +89,10 @@ export default function CartPage() {
   ) => {
     try {
       setUpdating(`${productId}-${variationId || "none"}`);
-      const response = await axios.delete(`${API_URL}/cart/remove`, {
+      const response = await axiosInstance.delete("/cart/remove", {
         data: {
           productId,
           variationId,
-        },
-        headers: {
-          Authorization: `Bearer ${session?.user?.accessToken}`,
         },
       });
       setCart(response.data.data);
@@ -124,11 +110,7 @@ export default function CartPage() {
 
     try {
       setLoading(true);
-      const response = await axios.delete(`${API_URL}/cart/clear`, {
-        headers: {
-          Authorization: `Bearer ${session?.user?.accessToken}`,
-        },
-      });
+      const response = await axiosInstance.delete("/cart/clear");
       setCart(response.data.data);
       toast.success("Cart cleared");
     } catch (error: any) {

@@ -3,9 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import OrderReviewModal from "./OrderReviewModal";
-import axios from "axios";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+import axiosInstance from "@/services/axios";
 
 interface DeliveredOrder {
   _id: string;
@@ -26,18 +24,15 @@ export default function AutoReviewPrompt() {
   const { data: session, status } = useSession();
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [deliveredOrder, setDeliveredOrder] = useState<DeliveredOrder | null>(null);
-  const [checked, setChecked] = useState(false);
 
   useEffect(() => {
-    if (status === "authenticated" && !checked) {
+    if (status === "authenticated") {
       checkForDeliveredOrders();
     }
-  }, [status, checked]);
+  }, [status]);
 
   const checkForDeliveredOrders = async () => {
     try {
-      setChecked(true);
-      
       // Check if the user has dismissed review prompts recently
       const lastDismissed = localStorage.getItem("lastReviewDismissed");
       if (lastDismissed) {
@@ -51,13 +46,10 @@ export default function AutoReviewPrompt() {
         }
       }
 
-      const response = await axios.get(`${API_URL}/orders`, {
+      const response = await axiosInstance.get("/orders/my-orders", {
         params: {
           status: "delivered",
           limit: 50,
-        },
-        headers: {
-          Authorization: `Bearer ${session?.user?.accessToken}`,
         },
       });
 
@@ -76,21 +68,19 @@ export default function AutoReviewPrompt() {
 
   const handleClose = () => {
     setShowReviewModal(false);
+    setDeliveredOrder(null);
     // Store dismissal time
     localStorage.setItem("lastReviewDismissed", new Date().toISOString());
   };
 
   const handleSuccess = () => {
     setShowReviewModal(false);
+    setDeliveredOrder(null);
     // Clear dismissal time since user engaged
     localStorage.removeItem("lastReviewDismissed");
-    // Check if there are more orders to review
-    setTimeout(() => {
-      setChecked(false);
-    }, 1000);
   };
 
-  if (!deliveredOrder) return null;
+  if (!deliveredOrder || !showReviewModal) return null;
 
   return (
     <OrderReviewModal

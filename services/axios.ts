@@ -33,13 +33,26 @@ axiosInstance.interceptors.response.use(
     return response;
   },
   (error) => {
+    const errorDetails = {
+      status: error.response?.status,
+      statusText: error.response?.statusText,
+      message: error.message,
+      url: error.config?.url,
+      data: error.response?.data
+    };
+    console.error("❌ [Axios] Response error:", JSON.stringify(errorDetails, null, 2));
+    console.error("❌ [Axios] Error message:", error.message);
+    if (error.response?.data) {
+      console.error("❌ [Axios] Response data:", JSON.stringify(error.response.data, null, 2));
+    }
+    
     if (error.response?.status === 401) {
       // Unauthorized - redirect to login
       if (typeof window !== 'undefined') {
         window.location.href = "/login";
       }
     }
-    return Promise.reject(error);
+    return Promise.reject(error.response?.data || error);
   }
 );
 

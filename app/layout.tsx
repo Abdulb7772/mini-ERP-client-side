@@ -3,7 +3,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import SessionProvider from "@/providers/SessionProvider";
 import Navbar from "@/components/Navbar";
-import AutoReviewPrompt from "@/components/AutoReviewPrompt";
 import { Toaster } from "react-hot-toast";
 
 const geistSans = Geist({
@@ -34,7 +33,6 @@ export default function RootLayout({
       >
         <SessionProvider>
           <Navbar />
-          <AutoReviewPrompt />
           {children}
           <Toaster position="top-right" />
         </SessionProvider>

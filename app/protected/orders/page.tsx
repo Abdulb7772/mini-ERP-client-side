@@ -3,10 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import axios from "axios";
+import axiosInstance from "@/services/axios";
 import Link from "next/link";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 interface OrderItem {
   productId: {
@@ -44,11 +42,7 @@ export default function OrdersPage() {
 
   const fetchOrders = async () => {
     try {
-      const response = await axios.get(`${API_URL}/orders`, {
-        headers: {
-          Authorization: `Bearer ${session?.user?.accessToken}`,
-        },
-      });
+      const response = await axiosInstance.get("/orders/my-orders");
 
       // Filter orders for current customer if user is a customer
       const ordersData = response.data.data || [];

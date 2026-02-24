@@ -3,11 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import axios from "axios";
+import axiosInstance from "@/services/axios";
 import toast from "react-hot-toast";
 import AddToCartModal from "@/components/AddToCartModal";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 interface WishlistItem {
   productId: {
@@ -56,11 +54,7 @@ export default function WishlistPage() {
   const fetchWishlist = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/wishlist`, {
-        headers: {
-          Authorization: `Bearer ${session?.user?.accessToken}`,
-        },
-      });
+      const response = await axiosInstance.get("/wishlist");
       setWishlist(response.data.data);
     } catch (error: any) {
       console.error("Error fetching wishlist:", error);
@@ -73,13 +67,10 @@ export default function WishlistPage() {
   const removeItem = async (productId: string, variationId?: string) => {
     try {
       setRemoving(`${productId}-${variationId || "none"}`);
-      const response = await axios.delete(`${API_URL}/wishlist/remove`, {
+      const response = await axiosInstance.delete("/wishlist/remove", {
         data: {
           productId,
           variationId,
-        },
-        headers: {
-          Authorization: `Bearer ${session?.user?.accessToken}`,
         },
       });
       setWishlist(response.data.data);
@@ -97,11 +88,7 @@ export default function WishlistPage() {
 
     try {
       setLoading(true);
-      const response = await axios.delete(`${API_URL}/wishlist/clear`, {
-        headers: {
-          Authorization: `Bearer ${session?.user?.accessToken}`,
-        },
-      });
+      const response = await axiosInstance.delete("/wishlist/clear");
       setWishlist(response.data.data);
       toast.success("Wishlist cleared");
     } catch (error: any) {
@@ -115,17 +102,12 @@ export default function WishlistPage() {
   const moveToCart = async (item: WishlistItem) => {
     try {
       // Add to cart
-      await axios.post(
-        `${API_URL}/cart`,
+      await axiosInstance.post(
+        "/cart",
         {
           productId: item.productId._id,
           variationId: item.variationId?._id,
           quantity: 1,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${session?.user?.accessToken}`,
-          },
         }
       );
 
