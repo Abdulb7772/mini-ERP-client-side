@@ -114,7 +114,6 @@ export default function WishlistPage() {
       },
     });
   };
-  };
 
   const moveToCart = async (item: WishlistItem) => {
     try {
