@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import axiosInstance from "@/services/axios";
 import toast from "react-hot-toast";
 import CheckoutModal from "@/components/CheckoutModal";
+import { confirmToast } from "@/utils/confirmToast";
 
 interface CartItem {
   productId: string;
@@ -106,19 +107,23 @@ export default function CartPage() {
   };
 
   const clearCart = async () => {
-    if (!confirm("Are you sure you want to clear your cart?")) return;
-
-    try {
-      setLoading(true);
-      const response = await axiosInstance.delete("/cart/clear");
-      setCart(response.data.data);
-      toast.success("Cart cleared");
-    } catch (error: any) {
-      console.error("Error clearing cart:", error);
-      toast.error("Failed to clear cart");
-    } finally {
-      setLoading(false);
-    }
+    confirmToast({
+      title: "Clear Cart",
+      message: "Are you sure you want to clear your cart?",
+      onConfirm: async () => {
+        try {
+          setLoading(true);
+          const response = await axiosInstance.delete("/cart/clear");
+          setCart(response.data.data);
+          toast.success("Cart cleared");
+        } catch (error: any) {
+          console.error("Error clearing cart:", error);
+          toast.error("Failed to clear cart");
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
   };
 
   if (status === "loading" || loading) {

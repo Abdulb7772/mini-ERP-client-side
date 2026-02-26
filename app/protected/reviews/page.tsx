@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 import Modal from "@/components/Modal";
 import ReviewForm from "@/components/ReviewForm";
 import {Skeleton} from "@/components/Skeleton";
+import { confirmToast } from "@/utils/confirmToast";
 
 interface Review {
   _id: string;
@@ -74,16 +75,20 @@ export default function MyReviewsPage() {
   };
 
   const handleDeleteReview = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this review?")) return;
-
-    try {
-      await reviewAPI.deleteReview(id);
-      toast.success("Review deleted successfully");
-      fetchReviews();
-    } catch (error) {
-      console.error("Error deleting review:", error);
-      toast.error("Failed to delete review");
-    }
+    confirmToast({
+      title: "Delete Review",
+      message: "Are you sure you want to delete this review?",
+      onConfirm: async () => {
+        try {
+          await reviewAPI.deleteReview(id);
+          toast.success("Review deleted successfully");
+          fetchReviews();
+        } catch (error) {
+          console.error("Error deleting review:", error);
+          toast.error("Failed to delete review");
+        }
+      },
+    });
   };
 
   const getStatusColor = (status: string) => {

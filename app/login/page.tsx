@@ -22,6 +22,11 @@ function LoginForm() {
     if (searchParams.get("session") === "expired") {
       toast.error("You were logged out due to inactivity");
     }
+    
+    // Check if access was denied due to non-customer role
+    if (searchParams.get("error") === "AccessDenied") {
+      toast.error("Access denied. This portal is for customers only. Staff should use the admin portal.");
+    }
   }, [searchParams]);
 
   const validationSchema = Yup.object({
@@ -51,8 +56,12 @@ function LoginForm() {
         console.log('Login result:', result);
 
         if (result?.error) {
+          // Check for customer-only access error
+          if (result.error.includes("customers only") || result.error.includes("Access denied")) {
+            toast.error("This portal is for customers only. Staff and administrators should use the admin portal.");
+          }
           // Check if error is about email verification
-          if (result.error.includes("verify") || result.error.includes("Verify")) {
+          else if (result.error.includes("verify") || result.error.includes("Verify")) {
             toast.error("Please verify your email before logging in. Check your inbox for the verification link.");
           } else {
             toast.error(result.error || "Invalid email or password");

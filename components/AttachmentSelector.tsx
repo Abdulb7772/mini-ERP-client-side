@@ -1,12 +1,21 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axiosInstance from "@/services/axios";
+import toast from "react-hot-toast";
+
+interface Order {
+  _id: string;
+  orderNumber: string;
+  totalAmount: number;
+  status: string;
+  createdAt: string;
+}
 
 interface AttachmentSelectorProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (id: string) => void;
+  onSelect: (type: "order", id: string) => void;
 }
 
 export default function AttachmentSelector({
@@ -14,61 +23,87 @@ export default function AttachmentSelector({
   onClose,
   onSelect,
 }: AttachmentSelectorProps) {
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
 
   useEffect(() => {
     if (isOpen) {
-      loadOrders();
+      fetchOrders();
     }
-  }, [isOpen, page]);
+  }, [isOpen]);
 
-  const loadOrders = async () => {
-    setLoading(true);
+  const fetchOrders = async () => {
     try {
-      const response = await axiosInstance.get(`/orders/my-orders?page=${page}&limit=10`);
-      console.log("Orders response:", response.data);
+      setLoading(true);
+      const response = await axiosInstance.get("/orders/my-orders");
       setOrders(response.data.data || []);
-      setTotalPages(response.data.pagination?.pages || 1);
-    } catch (error) {
-      console.error("Error loading orders:", error);
-      setOrders([]);
+    } catch (error: any) {
+      console.error("Error fetching orders:", error);
+      toast.error("Failed to load orders");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSelect = (order: any) => {
-    onSelect(order._id);
+  const handleSelect = (orderId: string) => {
+    onSelect("order", orderId);
     onClose();
   };
 
-  const filteredOrders = orders.filter((order) => {
-    const query = searchQuery.toLowerCase();
-    return order.orderNumber?.toLowerCase().includes(query);
-  });
+  const filteredOrders = orders.filter((order) =>
+    order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-60 flex items-center justify-center backdrop-blur-sm bg-black/40 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl flex flex-col w-full max-w-2xl max-h-[80vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[80vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-gray-200 bg-linear-to-r from-blue-500 to-purple-600">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">📦</span>
-              <h2 className="text-2xl font-bold text-white">Select Order</h2>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-white hover:text-gray-200 transition-colors"
+        <div className="bg-linear-to-r from-purple-600 to-blue-600 px-6 py-4 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-white">Select Order to Attach</h2>
+          <button
+            onClick={onClose}
+            className="text-white/80 hover:text-white transition"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
+        </div>
+
+        {/* Search */}
+        <div className="p-4 border-b border-gray-700">
+          <input
+            type="text"
+            placeholder="Search by order number..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-4 py-2 bg-gray-700 text-white rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
+          />
+        </div>
+
+        {/* Orders List */}
+        <div className="flex-1 overflow-y-auto p-4">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+            </div>
+          ) : filteredOrders.length === 0 ? (
+            <div className="text-center py-12">
               <svg
-                className="w-6 h-6"
+                className="w-16 h-16 text-gray-600 mx-auto mb-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -77,95 +112,52 @@ export default function AttachmentSelector({
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
+                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
                 />
               </svg>
-            </button>
-          </div>
-        </div>
-
-        {/* Search */}
-        <div className="p-4 border-b border-gray-200">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search orders by order number..."
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
-          />
-        </div>
-
-        {/* Orders List */}
-        <div className="flex-1 overflow-y-auto">
-          {loading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-            </div>
-          ) : filteredOrders.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
-              <span className="text-4xl mb-2">🔍</span>
-              <p>No orders found</p>
+              <p className="text-gray-400">No orders found</p>
             </div>
           ) : (
-            filteredOrders.map((order) => (
-              <button
-                key={order._id}
-                onClick={() => handleSelect(order)}
-                className="w-full text-left p-4 hover:bg-blue-50 border-b border-gray-100 transition-colors"
-              >
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-gray-900">
+            <div className="space-y-2">
+              {filteredOrders.map((order) => (
+                <button
+                  key={order._id}
+                  onClick={() => handleSelect(order._id)}
+                  className="w-full text-left p-4 bg-gray-700/50 hover:bg-gray-700 rounded-lg transition border border-gray-600 hover:border-purple-500"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-semibold text-white">
                       Order #{order.orderNumber}
-                    </p>
-                    <p className="text-sm text-gray-600">
-                      {new Date(order.createdAt).toLocaleDateString()}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Total: Rs. {order.totalAmount?.toFixed(2) || "0.00"}
-                    </p>
+                    </span>
+                    <span
+                      className={`px-2 py-1 rounded text-xs font-semibold ${
+                        order.status === "delivered" || order.status === "completed"
+                          ? "bg-green-600/20 text-green-400"
+                          : order.status === "shipped"
+                          ? "bg-purple-600/20 text-purple-400"
+                          : order.status === "processing"
+                          ? "bg-blue-600/20 text-blue-400"
+                          : "bg-yellow-600/20 text-yellow-400"
+                      }`}
+                    >
+                      {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                    </span>
                   </div>
-                  <span
-                    className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      order.status === "delivered"
-                        ? "bg-green-100 text-green-700"
-                        : order.status === "pending"
-                        ? "bg-yellow-100 text-yellow-700"
-                        : order.status === "processing"
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-gray-100 text-gray-700"
-                    }`}
-                  >
-                    {order.status}
-                  </span>
-                </div>
-              </button>
-            ))
+                  <div className="flex items-center justify-between text-sm text-gray-400">
+                    <span>${order.totalAmount.toFixed(2)}</span>
+                    <span>
+                      {new Date(order.createdAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
           )}
         </div>
-
-        {/* Pagination */}
-        {totalPages > 1 && (
-          <div className="p-4 border-t border-gray-200 flex items-center justify-between">
-            <button
-              onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-              disabled={page === 1}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
-            >
-              Previous
-            </button>
-            <span className="text-sm text-gray-600">
-              Page {page} of {totalPages}
-            </span>
-            <button
-              onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-              disabled={page === totalPages}
-              className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-300 transition-colors"
-            >
-              Next
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

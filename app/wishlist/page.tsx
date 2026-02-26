@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import toast from "react-hot-toast";
+import { confirmToast } from "@/utils/confirmToast";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
@@ -91,23 +92,28 @@ export default function WishlistPage() {
   };
 
   const clearWishlist = async () => {
-    if (!confirm("Are you sure you want to clear your wishlist?")) return;
-
-    try {
-      setLoading(true);
-      const response = await axios.delete(`${API_URL}/wishlist/clear`, {
-        headers: {
-          Authorization: `Bearer ${session?.user?.accessToken}`,
-        },
-      });
-      setWishlist(response.data.data);
-      toast.success("Wishlist cleared");
-    } catch (error: any) {
-      console.error("Error clearing wishlist:", error);
-      toast.error("Failed to clear wishlist");
-    } finally {
-      setLoading(false);
-    }
+    confirmToast({
+      title: "Clear Wishlist",
+      message: "Are you sure you want to clear your wishlist?",
+      onConfirm: async () => {
+        try {
+          setLoading(true);
+          const response = await axios.delete(`${API_URL}/wishlist/clear`, {
+            headers: {
+              Authorization: `Bearer ${session?.user?.accessToken}`,
+            },
+          });
+          setWishlist(response.data.data);
+          toast.success("Wishlist cleared");
+        } catch (error: any) {
+          console.error("Error clearing wishlist:", error);
+          toast.error("Failed to clear wishlist");
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
+  };
   };
 
   const moveToCart = async (item: WishlistItem) => {

@@ -40,6 +40,15 @@ const handler = NextAuth({
           const data = await res.json();
 
           if (res.ok && data.status === "success" && data.data) {
+            // ⚠️ CLIENT-SIDE SECURITY: Only allow customers to login
+            if (data.data.user.role !== "customer") {
+              console.log('🚫 [NextAuth] Login rejected: User role is not "customer"');
+              console.log('🚫 [NextAuth] Attempted role:', data.data.user.role);
+              console.log('🚫 [NextAuth] User email:', data.data.user.email);
+              throw new Error("Access denied. This portal is for customers only.");
+            }
+
+            console.log('✅ [NextAuth] Customer login authorized');
             return {
               id: data.data.user.id,
               email: data.data.user.email,

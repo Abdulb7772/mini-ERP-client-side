@@ -1,164 +1,242 @@
 "use client";
 
-import React from "react";
+import { useState, useEffect } from "react";
+import axiosInstance from "@/services/axios";
+import toast from "react-hot-toast";
+
+interface OrderItem {
+  productId: {
+    _id: string;
+    name: string;
+    imageUrl?: string;
+    images?: string[];
+  };
+  variationId?: string;
+  quantity: number;
+  price: number;
+  subtotal: number;
+}
+
+interface OrderDetails {
+  _id: string;
+  orderNumber: string;
+  customerId: {
+    name: string;
+    email: string;
+    address: string;
+  };
+  items: OrderItem[];
+  totalAmount: number;
+  paymentStatus: string;
+  status: string;
+  createdAt: string;
+}
 
 interface AttachmentDetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  type: "order" | "product" | "customer";
-  data: any;
+  attachmentType: "order" | "product" | "customer" | null;
+  attachmentId: string | null;
 }
 
 export default function AttachmentDetailsModal({
   isOpen,
   onClose,
-  type,
-  data,
+  attachmentType,
+  attachmentId,
 }: AttachmentDetailsModalProps) {
-  if (!isOpen || !data) return null;
+  const [orderDetails, setOrderDetails] = useState<OrderDetails | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const renderOrderDetails = () => (
-    <div className="space-y-4">
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg">
-        <h3 className="text-xl font-bold text-gray-900 mb-2">
-          Order #{data.orderNumber}
-        </h3>
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <span className="text-gray-600">Status:</span>
-            <span
-              className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${
-                data.status === "delivered"
-                  ? "bg-green-100 text-green-700"
-                  : data.status === "pending"
-                  ? "bg-yellow-100 text-yellow-700"
-                  : data.status === "processing"
-                  ? "bg-blue-100 text-blue-700"
-                  : "bg-gray-100 text-gray-700"
-              }`}
-            >
-              {data.status}
-            </span>
-          </div>
-          <div>
-            <span className="text-gray-600">Total:</span>
-            <span className="ml-2 font-bold text-gray-900">
-              Rs. {data.totalAmount?.toFixed(2) || "0.00"}
-            </span>
-          </div>
-        </div>
-      </div>
-      
-      {/* Products */}
-      {data.items && data.items.length > 0 && (
-        <div className="bg-white p-4 rounded-lg border border-gray-200">
-          <h4 className="text-sm font-semibold text-gray-700 mb-3">Ordered Products:</h4>
-          <div className="space-y-2">
-            {data.items.map((item: any, index: number) => (
-              <div key={index} className="flex justify-between items-center text-sm py-2 border-b last:border-b-0">
-                <div>
-                  <span className="font-medium text-gray-900">
-                    {item.productId?.name || "Product"}
-                  </span>
-                  <span className="text-gray-500 ml-2">x{item.quantity}</span>
-                </div>
-                <span className="font-semibold text-gray-900">
-                  Rs. {item.subtotal?.toFixed(2) || "0.00"}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  useEffect(() => {
+    if (isOpen && attachmentType === "order" && attachmentId) {
+      fetchOrderDetails();
+    }
+  }, [isOpen, attachmentType, attachmentId]);
 
-  const renderProductDetails = () => (
-    <div className="space-y-4">
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg">
-        {data.images && data.images[0] && (
-          <img
-            src={data.images[0]}
-            alt={data.name}
-            className="w-full h-48 object-cover rounded-lg mb-4"
-          />
-        )}
-        <h3 className="text-xl font-bold text-gray-900 mb-2">{data.name}</h3>
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          
-          <div>
-            <span className="text-gray-600">Stock:</span>
-            <span className="ml-2 font-bold text-gray-900">
-              {data.stock || 0}
-            </span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  const fetchOrderDetails = async () => {
+    if (!attachmentId) return;
 
-  const renderCustomerDetails = () => (
-    <div className="space-y-4">
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg">
-        <h3 className="text-xl font-bold text-gray-900 mb-2">{data.name}</h3>
-        <div className="space-y-2 text-sm">
-          <div>
-            <span className="text-gray-600">Email:</span>
-            <span className="ml-2 text-gray-900">{data.email}</span>
-          </div>
-          <div>
-            <span className="text-gray-600">Phone:</span>
-            <span className="ml-2 text-gray-900">{data.phone || "N/A"}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get(`/orders/${attachmentId}`);
+      setOrderDetails(response.data.data);
+    } catch (error: any) {
+      console.error("Error fetching order details:", error);
+      toast.error("Failed to load order details");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen || !attachmentType || !attachmentId) return null;
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center backdrop-blur-sm bg-black/40 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-800 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[85vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-500 to-purple-600">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <span className="text-3xl">
-                {type === "order" ? "📦" : type === "product" ? "🛍️" : "👤"}
-              </span>
-              <h2 className="text-2xl font-bold text-white">
-                {type === "order"
-                  ? "Order Details"
-                  : type === "product"
-                  ? "Product Details"
-                  : "Customer Details"}
-              </h2>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-white hover:text-gray-200 transition-colors"
+        <div className="bg-linear-to-r from-purple-600 to-blue-600 px-6 py-4 flex items-center justify-between">
+          <h2 className="text-xl font-bold text-white">
+            {attachmentType === "order" && "Order Details"}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-white/80 hover:text-white transition"
+          >
+            <svg
+              className="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg
-                className="w-6 h-6"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          </div>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
         </div>
 
         {/* Content */}
-        <div className="p-6">
-          {type === "order" && renderOrderDetails()}
-          {type === "product" && renderProductDetails()}
-          {type === "customer" && renderCustomerDetails()}
+        <div className="flex-1 overflow-y-auto p-6">
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+            </div>
+          ) : attachmentType === "order" && orderDetails ? (
+            <div className="space-y-6">
+              {/* Order Info */}
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-gray-400 text-sm mb-1">Order Number</p>
+                  <p className="text-white font-semibold text-lg">
+                    {orderDetails.orderNumber}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm mb-1">Order Date</p>
+                  <p className="text-white font-semibold">
+                    {new Date(orderDetails.createdAt).toLocaleDateString("en-US", {
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                    })}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm mb-1">Payment Status</p>
+                  <span
+                    className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                      orderDetails.paymentStatus === "paid"
+                        ? "bg-green-600/20 text-green-400"
+                        : orderDetails.paymentStatus === "pending"
+                        ? "bg-yellow-600/20 text-yellow-400"
+                        : "bg-red-600/20 text-red-400"
+                    }`}
+                  >
+                    {orderDetails.paymentStatus.charAt(0).toUpperCase() +
+                      orderDetails.paymentStatus.slice(1)}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-sm mb-1">Order Status</p>
+                  <span
+                    className={`inline-block px-3 py-1 rounded-full text-sm font-semibold ${
+                      orderDetails.status === "delivered" ||
+                      orderDetails.status === "completed"
+                        ? "bg-green-600/20 text-green-400"
+                        : orderDetails.status === "shipped"
+                        ? "bg-purple-600/20 text-purple-400"
+                        : orderDetails.status === "processing"
+                        ? "bg-blue-600/20 text-blue-400"
+                        : "bg-yellow-600/20 text-yellow-400"
+                    }`}
+                  >
+                    {orderDetails.status.charAt(0).toUpperCase() +
+                      orderDetails.status.slice(1)}
+                  </span>
+                </div>
+              </div>
+
+              {/* Customer Info */}
+              <div className="border-t border-gray-700 pt-4">
+                <p className="text-gray-400 text-sm mb-3">Customer Information</p>
+                <div className="space-y-2">
+                  <p className="text-white">
+                    <span className="font-semibold">Name:</span>{" "}
+                    {orderDetails.customerId.name}
+                  </p>
+                  <p className="text-white">
+                    <span className="font-semibold">Email:</span>{" "}
+                    {orderDetails.customerId.email}
+                  </p>
+                  <p className="text-white">
+                    <span className="font-semibold">Address:</span>{" "}
+                    {orderDetails.customerId.address}
+                  </p>
+                </div>
+              </div>
+
+              {/* Order Items */}
+              <div className="border-t border-gray-700 pt-4">
+                <p className="text-gray-400 text-sm mb-3">Order Items</p>
+                <div className="space-y-3">
+                  {orderDetails.items.map((item, index) => {
+                    const productImage =
+                      item.productId.imageUrl ||
+                      item.productId.images?.[0] ||
+                      "/placeholder.png";
+
+                    return (
+                      <div
+                        key={index}
+                        className="flex items-center gap-4 bg-gray-700/50 rounded-lg p-3"
+                      >
+                        <div className="w-16 h-16 shrink-0 bg-gray-800 rounded overflow-hidden">
+                          <img
+                            src={productImage}
+                            alt={item.productId.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.src = "/placeholder.png";
+                            }}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white font-semibold truncate">
+                            {item.productId.name}
+                          </p>
+                          <p className="text-gray-400 text-sm">
+                            Quantity: {item.quantity} × ${item.price.toFixed(2)}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-white font-bold">
+                            ${item.subtotal.toFixed(2)}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Total */}
+              <div className="border-t border-gray-700 pt-4">
+                <div className="flex justify-between items-center bg-linear-to-r from-purple-600/20 to-blue-600/20 rounded-lg p-4">
+                  <span className="text-white text-xl font-bold">
+                    Total Amount
+                  </span>
+                  <span className="text-green-400 text-2xl font-bold">
+                    ${orderDetails.totalAmount.toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          ) : null}
         </div>
       </div>
     </div>

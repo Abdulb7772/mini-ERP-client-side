@@ -1,120 +1,173 @@
 import { io, Socket } from "socket.io-client";
 
-const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL?.replace("/api", "") || "http://localhost:5000";
+const SOCKET_URL = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || "http://localhost:5000";
 
-let socket: Socket | null = null;
+class SocketService {
+  private socket: Socket | null = null;
+  private token: string | null = null;
 
-export const initializeSocket = (token: string) => {
-  if (!socket) {
-    socket = io(SOCKET_URL, {
+  initialize(accessToken: string) {
+    if (!accessToken) {
+      return null;
+    }
+
+    const isSameToken = this.token === accessToken;
+
+    if (this.socket) {
+      if (!isSameToken) {
+        this.socket.removeAllListeners();
+        this.socket.disconnect();
+        this.socket = null;
+      } else {
+        if (!this.socket.connected && !this.socket.active) {
+          this.socket.connect();
+        }
+        return this.socket;
+      }
+    }
+
+    this.token = accessToken;
+    this.socket = io(SOCKET_URL, {
       auth: {
-        token,
+        token: accessToken,
       },
       transports: ["websocket", "polling"],
       reconnection: true,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
       reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
     });
 
-    socket.on("connect", () => {
-      console.log("✅ Socket.IO connected");
+    this.socket.on("connect", () => {
+      console.log("✅ Socket connected:", this.socket?.id);
     });
 
-    socket.on("disconnect", (reason) => {
-      console.log("❌ Socket.IO disconnected:", reason);
+    this.socket.on("disconnect", (reason) => {
+      console.log("❌ Socket disconnected:", reason);
     });
 
-    socket.on("connect_error", (error) => {
-      console.error("❌ Socket.IO connection error:", error);
+    this.socket.on("connect_error", (error) => {
+      console.error("Socket connection error:", error.message);
     });
 
-    socket.on("error", (error: { message: string }) => {
-      console.error("❌ Socket.IO error:", error.message);
-    });
+    return this.socket;
   }
 
-  return socket;
-};
-
-export const getSocket = () => {
-  return socket;
-};
-
-export const disconnectSocket = () => {
-  if (socket) {
-    socket.disconnect();
-    socket = null;
+  getSocket() {
+    if (!this.socket) {
+      throw new Error("Socket not initialized. Call initialize() first.");
+    }
+    return this.socket;
   }
-};
 
-// Socket event handlers
-export const joinChat = (chatId: string) => {
-  socket?.emit("chat:join", chatId);
-};
+  disconnect() {
+    if (this.socket) {
+      this.socket.removeAllListeners();
+      this.socket.disconnect();
+      this.socket = null;
+      this.token = null;
+    }
+  }
 
-export const leaveChat = (chatId: string) => {
-  socket?.emit("chat:leave", chatId);
-};
+  isConnected() {
+    return this.socket?.connected || false;
+  }
 
-export const sendMessage = (data: { chatId: string; text: string; attachments?: string[] }) => {
-  socket?.emit("message:send", data);
-};
+  // Join a chat
+  joinChat(chatId: string) {
+    this.socket?.emit("chat:join", chatId);
+  }
 
-export const startTyping = (chatId: string) => {
-  socket?.emit("typing:start", chatId);
-};
+  // Leave a chat
+  leaveChat(chatId: string) {
+    this.socket?.emit("chat:leave", chatId);
+  }
 
-export const stopTyping = (chatId: string) => {
-  socket?.emit("typing:stop", chatId);
-};
+  // Send a message
+  sendMessage(data: {
+    chatId: string;
+    message: string;
+    attachmentType?: "order" | "product" | "customer";
+    attachmentId?: string;
+  }) {
+    // Transform to backend format
+    const payload: any = {
+      chatId: data.chatId,
+      text: data.message,
+      attachments: [],
+    };
+    
+    // Add context if attachment is provided
+    if (data.attachmentType && data.attachmentId) {
+      payload.contextType = data.attachmentType;
+      payload.contextId = data.attachmentId;
+    }
+    
+    this.socket?.emit("message:send", payload);
+  }
 
-export const markMessagesAsRead = (chatId: string) => {
-  socket?.emit("message:read", { chatId });
-};
+  // Typing indicator
+  startTyping(chatId: string) {
+    this.socket?.emit("typing:start", chatId);
+  }
 
-export const markMessageAsDelivered = (messageId: string) => {
-  socket?.emit("message:delivered", messageId);
-};
+  stopTyping(chatId: string) {
+    this.socket?.emit("typing:stop", chatId);
+  }
 
-// Socket event listeners
-export const onNewMessage = (callback: (data: any) => void) => {
-  socket?.on("message:new", callback);
-};
+  // Mark messages as read
+  markAsRead(chatId: string) {
+    this.socket?.emit("message:read", { chatId });
+  }
 
-export const onChatUpdated = (callback: (data: any) => void) => {
-  socket?.on("chat:updated", callback);
-};
+  // Listen for new messages
+  onNewMessage(callback: (data: { chatId: string; message: any }) => void) {
+    this.socket?.on("message:new", callback);
+  }
 
-export const onTypingUpdate = (callback: (data: any) => void) => {
-  socket?.on("typing:update", callback);
-};
+  // Listen for typing indicators
+  onTyping(callback: (data: { chatId: string; userId: string; userName: string; isTyping: boolean }) => void) {
+    this.socket?.on("typing:update", callback);
+  }
 
-export const onMessagesRead = (callback: (data: any) => void) => {
-  socket?.on("messages:read", callback);
-};
+  onStopTyping(callback: (data: { chatId: string; userId: string; userName: string; isTyping: boolean }) => void) {
+    this.socket?.on("typing:update", callback);
+  }
 
-export const onMessageStatus = (callback: (data: any) => void) => {
-  socket?.on("message:status", callback);
-};
+  // Listen for message read receipts
+  onMessageRead(callback: (data: { chatId: string; userId: string }) => void) {
+    this.socket?.on("messages:read", callback);
+  }
 
-// Remove listeners
-export const offNewMessage = () => {
-  socket?.off("message:new");
-};
+  // Listen for chat updates
+  onChatUpdate(callback: (data: { chatId: string; lastMessage: string; lastMessageAt: Date }) => void) {
+    this.socket?.on("chat:updated", callback);
+  }
 
-export const offChatUpdated = () => {
-  socket?.off("chat:updated");
-};
+  offNewMessage(callback: (data: { chatId: string; message: any }) => void) {
+    this.socket?.off("message:new", callback);
+  }
 
-export const offTypingUpdate = () => {
-  socket?.off("typing:update");
-};
+  offTyping(callback: (data: { chatId: string; userId: string; userName: string; isTyping: boolean }) => void) {
+    this.socket?.off("typing:update", callback);
+  }
 
-export const offMessagesRead = () => {
-  socket?.off("messages:read");
-};
+  offStopTyping(callback: (data: { chatId: string; userId: string; userName: string; isTyping: boolean }) => void) {
+    this.socket?.off("typing:update", callback);
+  }
 
-export const offMessageStatus = () => {
-  socket?.off("message:status");
-};
+  offMessageRead(callback: (data: { chatId: string; userId: string }) => void) {
+    this.socket?.off("messages:read", callback);
+  }
+
+  offChatUpdate(callback: (data: { chatId: string; lastMessage: string; lastMessageAt: Date }) => void) {
+    this.socket?.off("chat:updated", callback);
+  }
+
+  // Remove all listeners
+  removeAllListeners() {
+    this.socket?.removeAllListeners();
+  }
+}
+
+const socketService = new SocketService();
+export default socketService;

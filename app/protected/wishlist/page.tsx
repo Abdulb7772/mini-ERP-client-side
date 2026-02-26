@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import axiosInstance from "@/services/axios";
 import toast from "react-hot-toast";
 import AddToCartModal from "@/components/AddToCartModal";
+import { confirmToast } from "@/utils/confirmToast";
 
 interface WishlistItem {
   productId: {
@@ -84,19 +85,23 @@ export default function WishlistPage() {
   };
 
   const clearWishlist = async () => {
-    if (!confirm("Are you sure you want to clear your wishlist?")) return;
-
-    try {
-      setLoading(true);
-      const response = await axiosInstance.delete("/wishlist/clear");
-      setWishlist(response.data.data);
-      toast.success("Wishlist cleared");
-    } catch (error: any) {
-      console.error("Error clearing wishlist:", error);
-      toast.error("Failed to clear wishlist");
-    } finally {
-      setLoading(false);
-    }
+    confirmToast({
+      title: "Clear Wishlist",
+      message: "Are you sure you want to clear your wishlist?",
+      onConfirm: async () => {
+        try {
+          setLoading(true);
+          const response = await axiosInstance.delete("/wishlist/clear");
+          setWishlist(response.data.data);
+          toast.success("Wishlist cleared");
+        } catch (error: any) {
+          console.error("Error clearing wishlist:", error);
+          toast.error("Failed to clear wishlist");
+        } finally {
+          setLoading(false);
+        }
+      },
+    });
   };
 
   const moveToCart = async (item: WishlistItem) => {

@@ -800,9 +800,12 @@ function OrderSuccessContent() {
           <p className="text-gray-400 mb-2">Need help with your order?</p>
           <Link
             href="/contact"
-            className="text-purple-400 hover:text-purple-300 font-semibold transition"
+            className="text-purple-400 hover:text-purple-300 font-semibold transition inline-flex items-center gap-2"
           >
-            Contact Support →
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+            Contact Support
           </Link>
         </div>
       </div>
@@ -960,7 +963,7 @@ function OrderSuccessContent() {
                                   href={properUrl}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="block w-20 h-20 bg-gray-700 rounded border border-gray-600 hover:border-purple-500 transition flex flex-col items-center justify-center p-2 group"
+                                  className="w-20 h-20 bg-gray-700 rounded border border-gray-600 hover:border-purple-500 transition flex flex-col items-center justify-center p-2 group"
                                   title={`View ${fileExtension}`}
                                 >
                                   {isPDF ? (
@@ -984,9 +987,9 @@ function OrderSuccessContent() {
 
                   {/* Admin Response */}
                   {complaint.response && (
-                    <div className="mt-4 bg-gradient-to-r from-green-600/10 to-blue-600/10 border-2 border-green-600/40 rounded-lg p-4 shadow-lg">
+                    <div className="mt-4 bg-linear-to-r from-green-600/10 to-blue-600/10 border-2 border-green-600/40 rounded-lg p-4 shadow-lg">
                       <div className="flex items-start gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center shrink-0 shadow-md">
+                        <div className="w-12 h-12 bg-linear-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center shrink-0 shadow-md">
                           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 19v-8.93a2 2 0 01.89-1.664l7-4.666a2 2 0 012.22 0l7 4.666A2 2 0 0121 10.07V19M3 19a2 2 0 002 2h14a2 2 0 002-2M3 19l6.75-4.5M21 19l-6.75-4.5M3 10l6.75 4.5M21 10l-6.75 4.5m0 0l-1.14.76a2 2 0 01-2.22 0l-1.14-.76" />
                           </svg>
@@ -1033,7 +1036,7 @@ function OrderSuccessContent() {
       {/* Reviews Section */}
       {reviews.length > 0 && (
         <div className="mt-8 bg-gray-800 rounded-2xl shadow-2xl overflow-hidden no-print">
-          <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4">
+          <div className="bg-linear-to-r from-purple-600 to-blue-600 px-6 py-4">
             <h2 className="text-2xl font-bold text-white flex items-center gap-2">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />
@@ -1131,9 +1134,9 @@ function OrderSuccessContent() {
 
                   {/* Admin Reply */}
                   {review.adminReply && (
-                    <div className="mt-4 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 border-2 border-blue-600/40 rounded-lg p-4 shadow-lg">
+                    <div className="mt-4 bg-linear-to-r from-blue-600/10 to-indigo-600/10 border-2 border-blue-600/40 rounded-lg p-4 shadow-lg">
                       <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shrink-0">
+                        <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shrink-0">
                           <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                           </svg>
