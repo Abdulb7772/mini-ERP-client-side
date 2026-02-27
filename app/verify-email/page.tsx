@@ -91,7 +91,7 @@ function VerifyEmailContent() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-indigo-600 to-violet-500 flex items-center justify-center px-6 py-10">
+    <div className="min-h-screen bg-linear-to-br from-purple-600 via-indigo-600 to-violet-500 flex items-center justify-center px-6 py-10">
       <motion.div
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
@@ -156,7 +156,7 @@ function VerifyEmailContent() {
                 onClick={handleResendEmail}
                 loading={loading}
                 disabled={!email}
-                className="w-full rounded-xl py-3 font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition"
+                className="w-full rounded-xl py-3 font-semibold bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 transition"
               >
                 Resend Verification Email
               </Button>
@@ -186,7 +186,7 @@ function VerifyEmailContent() {
 export default function VerifyEmailPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-indigo-600 to-violet-500 flex items-center justify-center">
+      <div className="min-h-screen bg-linear-to-br from-purple-600 via-indigo-600 to-violet-500 flex items-center justify-center">
         <div className="text-white">Loading...</div>
       </div>
     }>

@@ -594,7 +594,7 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, onOrderSucce
     setStep("select");
     setPaymentMethod(null);
     // Navigate to success page with order ID
-    router.push(`/protected/order-success?orderId=${orderId}`);
+    router.push(`/order-success?orderId=${orderId}`);
   };
 
   const handleClose = () => {
@@ -775,3 +775,4 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, onOrderSucce
     </div>
   );
 }
+

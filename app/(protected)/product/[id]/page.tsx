@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import axios from "axios";
 import Link from "next/link";
+import toast from "react-hot-toast";
 import OrderNowModal from "@/components/OrderNowModal";
 import CheckoutModal from "@/components/CheckoutModal";
 import ProductReviews from "@/components/ProductReviews";
@@ -97,7 +98,10 @@ export default function ProductDetailPage() {
   const handleAddToCart = () => {
     const itemToAdd = selectedVariation || product;
     console.log("Adding to cart:", itemToAdd, "Quantity:", quantity);
-    alert(`Added ${quantity} x ${product?.name}${selectedVariation ? ` (${[selectedVariation.size, selectedVariation.color].filter(Boolean).join(' - ')})` : ''} to cart!`);
+    toast.success(`Added ${quantity} x ${product?.name}${selectedVariation ? ` (${[selectedVariation.size, selectedVariation.color].filter(Boolean).join(' - ')})` : ''} to cart!`, {
+      icon: "🛒",
+      duration: 3000,
+    });
   };
 
   const handleOrderNow = () => {
@@ -166,7 +170,7 @@ export default function ProductDetailPage() {
           <h2 className="text-2xl font-bold text-white mb-2">Product Not Found</h2>
           <p className="text-gray-400 mb-6">The product you're looking for doesn't exist.</p>
           <Link
-            href="/protected/products"
+            href="/products"
             className="inline-block px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
           >
             Back to Products
@@ -186,7 +190,7 @@ export default function ProductDetailPage() {
               Home
             </Link>
             <span className="mx-2 text-gray-600">/</span>
-            <Link href="/protected/products" className="text-gray-400 hover:text-white transition">
+            <Link href="/products" className="text-gray-400 hover:text-white transition">
               Products
             </Link>
             <span className="mx-2 text-gray-600">/</span>

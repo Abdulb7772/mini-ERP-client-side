@@ -113,7 +113,7 @@ export default function OrdersPage() {
               You haven't placed any orders yet. Start shopping to see your orders here.
             </p>
             <Link
-              href="/protected/products"
+              href="/products"
               className="inline-block px-6 py-3 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition"
             >
               Start Shopping
@@ -124,7 +124,7 @@ export default function OrdersPage() {
             {orders.map((order) => (
               <Link
                 key={order._id}
-                href={`/protected/order-success?orderId=${order._id}`}
+                href={`/order-success?orderId=${order._id}`}
                 className="block bg-gray-800 rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-[1.01] overflow-hidden"
               >
                 <div className="p-6">

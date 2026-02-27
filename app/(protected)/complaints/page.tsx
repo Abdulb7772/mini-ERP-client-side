@@ -121,7 +121,7 @@ export default function ComplaintsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-pink-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-linear-to-br from-purple-50 via-blue-50 to-pink-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -160,7 +160,7 @@ export default function ComplaintsPage() {
               You haven't filed any complaints. If you have issues with an order, you can file a complaint from your order details page.
             </p>
             <Link
-              href="/protected/orders"
+              href="/orders"
               className="inline-block px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
             >
               View My Orders
@@ -264,7 +264,7 @@ export default function ComplaintsPage() {
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
             {/* Modal Header */}
-            <div className="bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-4 flex items-center justify-between rounded-t-2xl sticky top-0 z-10">
+            <div className="bg-linear-to-r from-purple-600 to-blue-600 px-6 py-4 flex items-center justify-between rounded-t-2xl sticky top-0 z-10">
               <div>
                 <h2 className="text-2xl font-bold text-white">Complaint Details</h2>
                 <p className="text-purple-100 text-sm">Order #{selectedComplaint.orderId.orderNumber}</p>
@@ -363,7 +363,7 @@ export default function ComplaintsPage() {
                               href={properUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="block w-full h-32 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg border-2 border-gray-300 hover:border-purple-500 transition flex flex-col items-center justify-center p-3 group"
+                              className="w-full h-32 bg-linear-to-br from-gray-50 to-gray-100 rounded-lg border-2 border-gray-300 hover:border-purple-500 transition flex flex-col items-center justify-center p-3 group"
                             >
                               {isPDF ? (
                                 <svg
@@ -407,9 +407,9 @@ export default function ComplaintsPage() {
 
               {/* Admin Response */}
               {selectedComplaint.response ? (
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-6">
+                <div className="bg-linear-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-lg p-6">
                   <div className="flex items-start gap-3 mb-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 bg-linear-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center shrink-0">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                       </svg>
@@ -447,7 +447,7 @@ export default function ComplaintsPage() {
               {/* Actions */}
               <div className="flex justify-end gap-3 pt-4 border-t">
                 <Link
-                  href={`/protected/order-success?orderId=${selectedComplaint.orderId._id}`}
+                  href={`/order-success?orderId=${selectedComplaint.orderId._id}`}
                   className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition font-medium"
                   onClick={() => setShowModal(false)}
                 >

@@ -70,7 +70,7 @@ export default function Footer() {
             <h3 className="font-semibold mb-4">Product</h3>
             <ul className="space-y-2 text-gray-400">
               <li><Link href="/" className="hover:text-white transition-colors">Home</Link></li>
-              <li><Link href="/protected/products" className="hover:text-white transition-colors">Our Products</Link></li>
+              <li><Link href="/products" className="hover:text-white transition-colors">Our Products</Link></li>
             </ul>
           </div>
           <div>
@@ -117,3 +117,4 @@ export default function Footer() {
     </footer>
   );
 }
+

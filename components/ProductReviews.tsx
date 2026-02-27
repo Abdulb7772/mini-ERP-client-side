@@ -10,7 +10,7 @@ interface Review {
   customerId: {
     _id: string;
     name: string;
-  };
+  } | null;
   rating: number;
   description: string;
   images?: string[];
@@ -218,7 +218,7 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-semibold text-gray-900">
-                      {review.customerId.name}
+                      {review.customerId?.name || "Anonymous User"}
                     </span>
                     {review.isVerified && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-800 text-xs font-medium rounded-full">
@@ -275,9 +275,9 @@ export default function ProductReviews({ productId }: ProductReviewsProps) {
 
               {/* Admin Reply */}
               {review.adminReply && (
-                <div className="mt-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4 shadow-sm">
+                <div className="mt-4 bg-linear-to-r from-blue-50 to-indigo-50 border-l-4 border-blue-500 rounded-lg p-4 shadow-sm">
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shrink-0">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                       </svg>

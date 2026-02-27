@@ -937,10 +937,10 @@ export default function LiveChatPage() {
                         </button>
                       </div>
                     )}
-                    <div className="flex items-end gap-2">
+                    <div className="flex items-top gap-2">
                       <button
                         onClick={() => setShowAttachmentSelector(true)}
-                        className="shrink-0 p-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
+                        className="shrink-0 h-12 w-12 flex items-center justify-center bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition"
                         title="Attach order"
                       >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -969,7 +969,7 @@ export default function LiveChatPage() {
                       <button
                         onClick={sendMessage}
                         disabled={(!newMessage.trim() && !pendingAttachment) || sending}
-                        className="shrink-0 p-3 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition"
+                        className="shrink-0 h-12 w-12 flex items-center justify-center bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white rounded-lg transition"
                       >
                         {sending ? (
                           <div className="animate-spin rounded-full h-5 w-5 border-t-2 border-b-2 border-white"></div>

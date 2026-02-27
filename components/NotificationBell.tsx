@@ -69,7 +69,7 @@ export default function NotificationBell() {
       // Navigate based on notification type
       if (notification.type === "complaint_replied" && notification.relatedId) {
         // Navigate to orders page to see the complaint reply
-        router.push(`/protected/orders`);
+        router.push(`/orders`);
       }
 
       setShowDropdown(false);
@@ -141,7 +141,7 @@ export default function NotificationBell() {
       </button>
 
       {showDropdown && (
-        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 max-h-[32rem] overflow-hidden z-50">
+        <div className="absolute right-0 mt-2 w-96 bg-white rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 max-h-32rem overflow-hidden z-50">
           {/* Header */}
           <div className="px-4 py-3 border-b border-gray-200 flex items-center justify-between bg-purple-50">
             <h3 className="text-sm font-semibold text-gray-900">Notifications</h3>
@@ -262,3 +262,4 @@ export default function NotificationBell() {
     </div>
   );
 }
+

@@ -93,7 +93,7 @@ export default function Navbar() {
                 About us
               </Link>
               <button
-                onClick={() => handleProtectedAction("/protected/products")}
+                onClick={() => handleProtectedAction("/products")}
                 className="text-gray-700 hover:text-purple-600 px-3 py-2 rounded-md text-lg font-medium transition"
               >
                 Products
@@ -104,7 +104,7 @@ export default function Navbar() {
             <div className="flex items-center space-x-2 border-l border-gray-200 pl-4">
               {/* Search Button */}
               <button
-                onClick={() => handleProtectedAction("/protected/search")}
+                onClick={() => handleProtectedAction("/search")}
                 className="text-gray-700 hover:text-purple-600 p-2 rounded-md transition"
                 title="Search"
               >
@@ -126,7 +126,7 @@ export default function Navbar() {
 
               {/* Liked (Wishlist) Button */}
               <button
-                onClick={() => handleProtectedAction("/protected/wishlist")}
+                onClick={() => handleProtectedAction("/wishlist")}
                 className="text-gray-700 hover:text-purple-600 p-2 rounded-md transition"
                 title="Wishlist"
               >
@@ -148,7 +148,7 @@ export default function Navbar() {
 
               {/* Cart Button */}
               <button
-                onClick={() => handleProtectedAction("/protected/cart")}
+                onClick={() => handleProtectedAction("/cart")}
                 className="text-gray-700 hover:text-purple-600 p-2 rounded-md transition relative"
                 title="Cart"
               >
@@ -174,7 +174,7 @@ export default function Navbar() {
               {/* Live Chat Button */}
               {status === "authenticated" && (
                 <button
-                  onClick={() => router.push("/protected/live-chat")}
+                  onClick={() => router.push("/live-chat")}
                   className="text-gray-700 hover:text-purple-600 p-2 rounded-md transition"
                   title="Live Chat"
                 >
@@ -245,35 +245,35 @@ export default function Navbar() {
                       </div>
 
                       <Link
-                        href="/protected/wallet"
+                        href="/wallet"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition font-medium"
                         onClick={() => setIsUserDropdownOpen(false)}
                       >
                         💰 My Wallet
                       </Link>
                       <Link
-                        href="/protected/profile"
+                        href="/profile"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition"
                         onClick={() => setIsUserDropdownOpen(false)}
                       >
                         Profile
                       </Link>
                       <Link
-                        href="/protected/orders"
+                        href="/orders"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition"
                         onClick={() => setIsUserDropdownOpen(false)}
                       >
                         My Orders
                       </Link>
                       <Link
-                        href="/protected/complaints"
+                        href="/complaints"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition"
                         onClick={() => setIsUserDropdownOpen(false)}
                       >
                         My Complaints
                       </Link>
                       <Link
-                        href="/protected/change-password"
+                        href="/change-password"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 transition"
                         onClick={() => setIsUserDropdownOpen(false)}
                       >
@@ -356,7 +356,7 @@ export default function Navbar() {
             </Link>
             <button
               onClick={() => {
-                handleProtectedAction("/protected/products");
+                handleProtectedAction("/products");
                 setIsMenuOpen(false);
               }}
               className="block w-full text-left text-gray-700 hover:text-purple-600 hover:bg-purple-50 px-3 py-2 rounded-md text-base font-medium transition"
@@ -368,7 +368,7 @@ export default function Navbar() {
             <div className="flex items-center justify-around py-3 border-t border-b border-gray-200 my-2">
               <button
                 onClick={() => {
-                  handleProtectedAction("/protected/search");
+                  handleProtectedAction("/search");
                   setIsMenuOpen(false);
                 }}
                 className="flex flex-col items-center text-gray-700 hover:text-purple-600"
@@ -391,7 +391,7 @@ export default function Navbar() {
               </button>
               <button
                 onClick={() => {
-                  handleProtectedAction("/protected/wishlist");
+                  handleProtectedAction("/wishlist");
                   setIsMenuOpen(false);
                 }}
                 className="flex flex-col items-center text-gray-700 hover:text-purple-600"
@@ -414,7 +414,7 @@ export default function Navbar() {
               </button>
               <button
                 onClick={() => {
-                  handleProtectedAction("/protected/cart");
+                  handleProtectedAction("/cart");
                   setIsMenuOpen(false);
                 }}
                 className="flex flex-col items-center text-gray-700 hover:text-purple-600"
@@ -438,7 +438,7 @@ export default function Navbar() {
               {status === "authenticated" && (
                 <button
                   onClick={() => {
-                    router.push("/protected/live-chat");
+                    router.push("/live-chat");
                     setIsMenuOpen(false);
                   }}
                   className="flex flex-col items-center text-gray-700 hover:text-purple-600"
@@ -485,28 +485,28 @@ export default function Navbar() {
                     </div>
                   </div>
                   <Link
-                    href="/protected/profile"
+                    href="/profile"
                     className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-md transition mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     Profile
                   </Link>
                   <Link
-                    href="/protected/orders"
+                    href="/orders"
                     className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-md transition mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     My Orders
                   </Link>
                   <Link
-                    href="/protected/complaints"
+                    href="/complaints"
                     className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-md transition mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
                     My Complaints
                   </Link>
                   <Link
-                    href="/protected/change-password"
+                    href="/change-password"
                     className="block w-full text-left px-3 py-2 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-600 rounded-md transition mb-2"
                     onClick={() => setIsMenuOpen(false)}
                   >
@@ -547,3 +547,4 @@ export default function Navbar() {
     </nav>
   );
 }
+

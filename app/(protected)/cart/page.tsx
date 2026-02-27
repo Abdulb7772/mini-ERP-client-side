@@ -199,7 +199,7 @@ export default function CartPage() {
               Start shopping to add items to your cart!
             </p>
             <button
-              onClick={() => router.push("/protected/products")}
+              onClick={() => router.push("/products")}
               className="bg-purple-600 text-white px-6 py-3 rounded-md hover:bg-purple-700 transition"
             >
               Continue Shopping
@@ -371,7 +371,7 @@ export default function CartPage() {
                   Proceed to Checkout
                 </button>
                 <button
-                  onClick={() => router.push("/protected/products")}
+                  onClick={() => router.push("/products")}
                   className="w-full mt-3 bg-gray-700 text-white py-3 rounded-lg hover:bg-gray-600 transition"
                 >
                   Continue Shopping
@@ -408,3 +408,4 @@ export default function CartPage() {
     </div>
   );
 }
+

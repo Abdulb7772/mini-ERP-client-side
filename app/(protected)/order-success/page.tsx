@@ -292,7 +292,7 @@ function OrderSuccessContent() {
       
       // Redirect to home page after successful cancellation
       setTimeout(() => {
-        router.push("/protected/products");
+        router.push("/products");
       }, 2000);
     } catch (error: any) {
       console.error("Error cancelling order:", error);
@@ -347,7 +347,7 @@ function OrderSuccessContent() {
             We couldn't find any order information. Please check your orders history.
           </p>
           <Link
-            href="/protected/products"
+            href="/products"
             className="inline-block px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-semibold"
           >
             Continue Shopping
@@ -524,7 +524,7 @@ function OrderSuccessContent() {
               <div className="space-y-4">
                 <div>
                   <p className="text-gray-400 text-sm mb-1">Customer Name</p>
-                  <p className="text-white font-semibold">{orderDetails.customerId.name}</p>
+                  <p className="text-white font-semibold">{orderDetails.customerId?.name || "N/A"}</p>
                 </div>
                 <div>
                   <p className="text-gray-400 text-sm mb-1">Delivery Address</p>
@@ -716,7 +716,7 @@ function OrderSuccessContent() {
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 no-print">
           <Link
-            href="/protected/products"
+            href="/products"
             className="flex-1 px-6 py-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg font-semibold transition text-center flex items-center justify-center gap-2"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

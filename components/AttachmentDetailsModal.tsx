@@ -166,11 +166,11 @@ export default function AttachmentDetailsModal({
                 <div className="space-y-2">
                   <p className="text-white">
                     <span className="font-semibold">Name:</span>{" "}
-                    {orderDetails.customerId.name}
+                    {orderDetails.customerId?.name || "N/A"}
                   </p>
                   <p className="text-white">
                     <span className="font-semibold">Email:</span>{" "}
-                    {orderDetails.customerId.email}
+                    {orderDetails.customerId?.email || "N/A"}
                   </p>
                   <p className="text-white">
                     <span className="font-semibold">Address:</span>{" "}

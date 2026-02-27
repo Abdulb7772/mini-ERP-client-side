@@ -18,6 +18,10 @@ interface Product {
   stock?: number;
   hasVariations?: boolean;
   lowestPrice?: number;
+  // For variations
+  productId?: string; // Parent product ID when this is a variation
+  isVariation?: boolean;
+  variationDetails?: string;
 }
 
 interface Variation {
@@ -47,7 +51,7 @@ export default function AddToCartModal({ isOpen, onClose, product, onProceedToCh
   const [adding, setAdding] = useState(false);
 
   useEffect(() => {
-    if (isOpen && product.hasVariations) {
+    if (isOpen && (product.hasVariations || product.isVariation)) {
       fetchVariations();
     } else {
       setVariations([]);
@@ -59,7 +63,9 @@ export default function AddToCartModal({ isOpen, onClose, product, onProceedToCh
   const fetchVariations = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_URL}/products/${product._id}`);
+      // Use productId if this is a variation, otherwise use _id
+      const targetProductId = product.productId || product._id;
+      const response = await axios.get(`${API_URL}/products/${targetProductId}`);
       const variationsData = response.data.data?.variations || [];
       setVariations(variationsData);
       if (variationsData.length > 0) {
@@ -90,13 +96,22 @@ export default function AddToCartModal({ isOpen, onClose, product, onProceedToCh
 
     try {
       setAdding(true);
+      
+      const requestData = {
+        productId: product.productId || product._id, // Use productId for variations, _id for regular products
+        variationId: product.isVariation 
+          ? (selectedVariation?._id || product._id) // If variation was passed, use selected or the passed variation
+          : selectedVariation?._id, // If regular product, use selected variation if any
+        quantity: quantity,
+      };
+      
+      console.log("🛒 Sending add to cart request:", requestData);
+      console.log("📦 Product:", product);
+      console.log("🎨 Selected Variation:", selectedVariation);
+      
       const response = await axios.post(
         `${API_URL}/cart`,
-        {
-          productId: product._id,
-          variationId: selectedVariation?._id,
-          quantity: quantity,
-        },
+        requestData,
         {
           headers: {
             Authorization: `Bearer ${session.user.accessToken}`,

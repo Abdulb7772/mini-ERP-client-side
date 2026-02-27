@@ -191,7 +191,7 @@ export default function WishlistPage() {
               Save your favorite items for later!
             </p>
             <button
-              onClick={() => router.push("/protected/products")}
+              onClick={() => router.push("/products")}
               className="bg-purple-600 text-white px-6 py-3 rounded-md hover:bg-purple-700 transition"
             >
               Browse Products
@@ -211,7 +211,7 @@ export default function WishlistPage() {
                   <div
                     key={itemKey}
                     className="bg-gray-800 rounded-lg p-4 flex gap-4 hover:bg-gray-750 transition-colors cursor-pointer"
-                    onClick={() => router.push(`/protected/product/${item.productId._id}`)}
+                    onClick={() => router.push(`/product/${item.productId._id}`)}
                   >
                     {/* Product Image */}
                     <div className="w-24 h-24 bg-gray-700 rounded-lg overflow-hidden shrink-0">
@@ -277,7 +277,7 @@ export default function WishlistPage() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          router.push(`/protected/product/${item.productId._id}`);
+                          router.push(`/product/${item.productId._id}`);
                         }}
                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-sm font-semibold flex items-center gap-2"
                       >
@@ -337,7 +337,7 @@ export default function WishlistPage() {
                   </div>
                   <div className="border-t border-gray-700 pt-3">
                     <button
-                      onClick={() => router.push("/protected/products")}
+                      onClick={() => router.push("/products")}
                       className="w-full px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition font-semibold"
                     >
                       Continue Shopping
@@ -365,3 +365,4 @@ export default function WishlistPage() {
     </div>
   );
 }
+

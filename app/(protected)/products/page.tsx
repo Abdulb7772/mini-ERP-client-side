@@ -146,14 +146,24 @@ export default function ProductsPage() {
     try {
       const response = await axiosInstance.get("/wishlist");
       const items = response.data.data?.items || [];
-      const productIds = new Set<string>(items.map((item: any) => item.productId._id || item.productId));
-      setWishlistItems(productIds);
+      // Track by variationId if present (for variations), otherwise by productId (for regular products)
+      const wishlistKeys = new Set<string>(
+        items.map((item: any) => {
+          // If item has variationId, use it (it matches the _id of expanded variation products)
+          if (item.variationId) {
+            return item.variationId._id || item.variationId;
+          }
+          // Otherwise use productId (it matches the _id of regular products)
+          return item.productId._id || item.productId;
+        })
+      );
+      setWishlistItems(wishlistKeys);
     } catch (error) {
       console.error("Error fetching wishlist:", error);
     }
   };
 
-  const toggleWishlist = async (productId: string, e: React.MouseEvent) => {
+  const toggleWishlist = async (product: DisplayProduct, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -162,25 +172,37 @@ export default function ProductsPage() {
       return;
     }
 
-    const isInWishlist = wishlistItems.has(productId);
+    // Create unique key for wishlist tracking (includes variation if present)
+    const wishlistKey = product._id;
+    const isInWishlist = wishlistItems.has(wishlistKey);
+
+    // Determine actual productId and variationId
+    const actualProductId = product.productId || product._id; // Use productId for variations, _id for regular products
+    const variationId = product.isVariation ? product._id : undefined;
 
     try {
       if (isInWishlist) {
         await axiosInstance.delete("/wishlist/remove", {
-          data: { productId },
+          data: { 
+            productId: actualProductId,
+            variationId: variationId 
+          },
         });
         setWishlistItems((prev) => {
           const newSet = new Set(prev);
-          newSet.delete(productId);
+          newSet.delete(wishlistKey);
           return newSet;
         });
         toast.success("Removed from wishlist");
       } else {
         await axiosInstance.post(
           "/wishlist",
-          { productId }
+          { 
+            productId: actualProductId,
+            variationId: variationId 
+          }
         );
-        setWishlistItems((prev) => new Set(prev).add(productId));
+        setWishlistItems((prev) => new Set(prev).add(wishlistKey));
         toast.success("Added to wishlist", {
           icon: "❤️",
         });
@@ -259,7 +281,7 @@ export default function ProductsPage() {
                   <div className="relative h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden">
                     {/* Wishlist Heart Button */}
                     <button
-                      onClick={(e) => toggleWishlist(product._id, e)}
+                      onClick={(e) => toggleWishlist(product, e)}
                       className="absolute top-2 left-2 z-10 p-2 rounded-full bg-white/80 hover:bg-white dark:bg-gray-800/80 dark:hover:bg-gray-800 transition-all duration-200 shadow-md hover:shadow-lg"
                       aria-label={wishlistItems.has(product._id) ? "Remove from wishlist" : "Add to wishlist"}
                     >
@@ -320,7 +342,7 @@ export default function ProductsPage() {
                           ${product.price.toFixed(2)}
                         </span>
                         <Link
-                          href={`/protected/product/${product.isVariation && product.productId ? product.productId : product._id}`}
+                          href={`/product/${product.isVariation && product.productId ? product.productId : product._id}`}
                           className="px-3 py-1.5 text-sm bg-linear-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:shadow-lg transition-all duration-300"
                         >
                           View Details
@@ -412,3 +434,4 @@ export default function ProductsPage() {
     </>
   );
 }
+

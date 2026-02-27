@@ -97,7 +97,7 @@ export default function ProfilePage() {
 
             <div className="border-t border-gray-200 pt-6 flex space-x-4">
               <button
-                onClick={() => router.push("/protected/change-password")}
+                onClick={() => router.push("/change-password")}
                 className="px-6 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition"
               >
                 Change Password
@@ -115,3 +115,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+
