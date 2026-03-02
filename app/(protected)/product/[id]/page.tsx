@@ -57,12 +57,10 @@ export default function ProductDetailPage() {
   const [checkoutItems, setCheckoutItems] = useState<any[]>([]);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.push("/login");
-    } else if (status === "authenticated" && params.id) {
+    if (params.id) {
       fetchProductDetails();
     }
-  }, [status, params.id]);
+  }, [params.id]);
 
   const fetchProductDetails = async () => {
     try {
@@ -96,6 +94,11 @@ export default function ProductDetailPage() {
   };
 
   const handleAddToCart = () => {
+    if (!session) {
+      toast.error("Please login to add items to cart");
+      router.push(`/login?redirect=/product/${params.id}`);
+      return;
+    }
     const itemToAdd = selectedVariation || product;
     console.log("Adding to cart:", itemToAdd, "Quantity:", quantity);
     toast.success(`Added ${quantity} x ${product?.name}${selectedVariation ? ` (${[selectedVariation.size, selectedVariation.color].filter(Boolean).join(' - ')})` : ''} to cart!`, {
@@ -105,6 +108,11 @@ export default function ProductDetailPage() {
   };
 
   const handleOrderNow = () => {
+    if (!session) {
+      toast.error("Please login to place an order");
+      router.push(`/login?redirect=/product/${params.id}`);
+      return;
+    }
     setIsOrderModalOpen(true);
   };
 
@@ -130,7 +138,7 @@ export default function ProductDetailPage() {
     return product?.stock || 0;
   };
 
-  if (status === "loading" || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
@@ -170,10 +178,10 @@ export default function ProductDetailPage() {
           <h2 className="text-2xl font-bold text-white mb-2">Product Not Found</h2>
           <p className="text-gray-400 mb-6">The product you're looking for doesn't exist.</p>
           <Link
-            href="/products"
+            href="/"
             className="inline-block px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
           >
-            Back to Products
+            Back to Home
           </Link>
         </div>
       </div>
@@ -188,10 +196,6 @@ export default function ProductDetailPage() {
           <nav className="flex text-sm">
             <Link href="/" className="text-gray-400 hover:text-white transition">
               Home
-            </Link>
-            <span className="mx-2 text-gray-600">/</span>
-            <Link href="/products" className="text-gray-400 hover:text-white transition">
-              Products
             </Link>
             <span className="mx-2 text-gray-600">/</span>
             <span className="text-white">{product.name}</span>
@@ -244,6 +248,20 @@ export default function ProductDetailPage() {
 
               {/* SKU */}
               <p className="text-gray-400 text-sm">SKU: {product.sku}</p>
+
+              {/* Star Rating */}
+              <div className="flex items-center gap-1">
+                {[...Array(5)].map((_, i) => (
+                  <svg
+                    key={i}
+                    className="w-5 h-5 text-yellow-400"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                ))}
+              </div>
 
               {/* Price */}
               <div className="flex items-center space-x-4">
@@ -318,7 +336,7 @@ export default function ProductDetailPage() {
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
-                  Add to Cart
+                  {session ? "Add to Cart" : "Login to Add to Cart"}
                 </button>
                 <button
                   onClick={handleOrderNow}
@@ -328,7 +346,7 @@ export default function ProductDetailPage() {
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
-                  Order Now
+                  {session ? "Order Now" : "Login to Order"}
                 </button>
               </div>
 
